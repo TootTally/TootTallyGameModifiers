@@ -54,7 +54,6 @@ namespace TootTallyGameModifiers
         public void UnloadModule()
         {
             _harmony.UnpatchSelf();
-            settingPage.Remove();
             LogInfo($"Module unloaded!");
         }
     }
