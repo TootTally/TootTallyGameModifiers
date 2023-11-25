@@ -91,6 +91,9 @@ namespace TootTallyGameModifiers
             _modifierButtonDict.Add(GameModifiers.ModifierType.InstaFail,
                 GameObjectFactory.CreateModifierButton(_modifierPanelContainer.transform, AssetManager.GetSprite("IF.png"), "InstaFailButton", "Insta Fail: Restart the song as soon as you miss.", _gameModifierDict.ContainsKey(GameModifiers.ModifierType.InstaFail),
                 delegate { Toggle(GameModifiers.ModifierType.InstaFail); }));
+
+
+            __instance.sortdrop.transform.SetAsLastSibling();
         }
 
         public static void Initialize()
