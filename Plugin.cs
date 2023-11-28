@@ -5,13 +5,11 @@ using HarmonyLib;
 using System.IO;
 using TootTallyCore.Utils.Assets;
 using TootTallyCore.Utils.TootTallyModules;
-using TootTallySettings;
 
 namespace TootTallyGameModifiers
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("TootTallyCore", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency("TootTallySettings", BepInDependency.DependencyFlags.HardDependency)]
     public class Plugin : BaseUnityPlugin, ITootTallyModule
     {
         public static Plugin Instance;
@@ -22,8 +20,6 @@ namespace TootTallyGameModifiers
 
         //Change this name to whatever you want
         public string Name { get => PluginInfo.PLUGIN_NAME; set => Name = value; }
-
-        public static TootTallySettingPage settingPage;
 
         public static void LogInfo(string msg) => Instance.Logger.LogInfo(msg);
         public static void LogError(string msg) => Instance.Logger.LogError(msg);
