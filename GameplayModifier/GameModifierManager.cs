@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
+using TootTallyCore;
 using TootTallyCore.Graphics;
 using TootTallyCore.Graphics.Animations;
 using TootTallyCore.Utils.Assets;
@@ -40,6 +41,9 @@ namespace TootTallyGameModifiers
             //good fuck yeah we love that
             GameObject camerapopups = GameObject.Find("Camera-Popups").gameObject;
             GameObject panelBody = camerapopups.transform.Find("LeaderboardCanvas/PanelBody").gameObject;
+            panelBody.GetComponent<Image>().color = Theme.colors.leaderboard.panelBody;
+            panelBody.transform.Find("scoresbody").gameObject.GetComponent<Image>().color = Theme.colors.leaderboard.scoresBody;
+
             _modifierPanel = GameObject.Instantiate(panelBody, __instance.fullpanel.transform);
             GameObjectFactory.DestroyFromParent(_modifierPanel, "CloseButton");
             GameObjectFactory.DestroyFromParent(_modifierPanel, "txt_legal");
