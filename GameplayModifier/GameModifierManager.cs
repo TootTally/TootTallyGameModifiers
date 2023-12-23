@@ -26,11 +26,17 @@ namespace TootTallyGameModifiers
         private static TootTallyAnimation _openAnimation, _closeAnimation;
         private static bool _canClickButtons;
 
+        [HarmonyPatch(typeof(HomeController), nameof(HomeController.Start))]
+        [HarmonyPostfix]
+        public static void OnHomeControllerStartInitialize()
+        {
+            if (!_isInitialized) Initialize(); 
+        }
+
         [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
         [HarmonyPostfix]
         static void OnLevelSelectControllerStartPostfix(LevelSelectController __instance)
         {
-            if (!_isInitialized) Initialize();
             _modifierButtonDict.Clear();
 
             _showModifierPanelButton = GameObjectFactory.CreateModifierButton(__instance.fullpanel.transform, AssetManager.GetSprite("ModifierButton.png"), "OpenModifierPanelButton", "", false, ShowModifierPanel);
@@ -81,7 +87,7 @@ namespace TootTallyGameModifiers
             layout.ignoreLayout = true;
 
             _modifierButtonDict.Add(GameModifiers.ModifierType.Hidden,
-                GameObjectFactory.CreateModifierButton(_modifierPanelContainer.transform, AssetManager.GetSprite("HD.png"), "HiddenButton","Hidden: Notes will disappear as they\n approach the left", _gameModifierDict.ContainsKey(GameModifiers.ModifierType.Hidden),
+                GameObjectFactory.CreateModifierButton(_modifierPanelContainer.transform, AssetManager.GetSprite("HD.png"), "HiddenButton", "Hidden: Notes will disappear as they\n approach the left", _gameModifierDict.ContainsKey(GameModifiers.ModifierType.Hidden),
                 delegate { Toggle(GameModifiers.ModifierType.Hidden); }));
 
             _modifierButtonDict.Add(GameModifiers.ModifierType.Flashlight,
@@ -95,7 +101,6 @@ namespace TootTallyGameModifiers
             _modifierButtonDict.Add(GameModifiers.ModifierType.InstaFail,
                 GameObjectFactory.CreateModifierButton(_modifierPanelContainer.transform, AssetManager.GetSprite("IF.png"), "InstaFailButton", "Insta Fail: Restart the song as soon as you miss.", _gameModifierDict.ContainsKey(GameModifiers.ModifierType.InstaFail),
                 delegate { Toggle(GameModifiers.ModifierType.InstaFail); }));
-
 
             __instance.sortdrop.transform.SetAsLastSibling();
         }
