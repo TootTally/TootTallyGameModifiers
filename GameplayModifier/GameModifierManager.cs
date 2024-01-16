@@ -187,6 +187,9 @@ namespace TootTallyGameModifiers
             {
                 mod.Initialize(__instance);
             }
+
+            if (!_gameModifierDict.ContainsKey(GameModifiers.ModifierType.Flashlight))
+                __instance.gameplayppp.vignette.enabled = false;
         }
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Update))]

@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using TootTallyCore.Utils.Assets;
 using UnityEngine;
+using UnityEngine.PostProcessing;
 using UnityEngine.UI;
+using static Unity.Audio.Handle;
 
 namespace TootTallyGameModifiers
 {
@@ -17,55 +18,33 @@ namespace TootTallyGameModifiers
 
             public Hidden() : base() { }
 
-            public static List<GameObject> _allnoteList;
-            public static List<FullNoteComponents> _activeNotesComponents;
-            public static List<FullNoteComponents> _notesToRemove;
-            public static Color _headOutColor, _headInColor, _headOutColorLerpEnd, _headInColorLerpEnd;
-            public static Color _tailOutColor, _tailInColor, _tailOutColorLerpEnd, _tailInColorLerpEnd;
-            public static Color _bodyOutStartColor, _bodyOutEndColor, _bodyOutStartColorLerpEnd, _bodyOutEndColorLerpEnd;
-            public static Color _bodyInStartColor, _bodyInEndColor, _bodyInStartColorLerpEnd, _bodyInEndColorLerpEnd;
-            public const float START_FADEOUT_POSX = 3.7f;
-            public const float END_FADEOUT_POSX = -0.7f;
+            public static Queue<FullNoteComponents> _activeNotesComponents;
+            public static Color _headOutColor, _headInColor;
+            public static Color _tailOutColor, _tailInColor;
+            public static Color _bodyOutStartColor, _bodyOutEndColor;
+            public static Color _bodyInStartColor, _bodyInEndColor;
+            public static readonly float START_FADEOUT_POSX = 4f;
+            public static readonly float END_FADEOUT_POSX = -0.8f;
 
             public override void Initialize(GameController __instance)
             {
-                _allnoteList = __instance.allnotes;
-                _activeNotesComponents = new List<FullNoteComponents>();
-                _notesToRemove = new List<FullNoteComponents>();
+                _counter = 0;
+                _activeNotesComponents = new Queue<FullNoteComponents>();
 
                 //Doing all this to make sure its future proof in case cosmetic plugin changes the outline colors or some shit
-                var note = _allnoteList.First();
+                var note = __instance.allnotes.First();
                 _headOutColor = note.transform.Find("StartPoint").GetComponent<Image>().color;
-                _headOutColorLerpEnd = GetColorZeroAlpha(_headOutColor);
-
                 _headInColor = note.transform.Find("StartPoint/StartPointColor").GetComponent<Image>().color;
-                _headInColorLerpEnd = GetColorZeroAlpha(_headInColor);
-
                 _tailOutColor = note.transform.Find("EndPoint").GetComponent<Image>().color;
-                _tailOutColorLerpEnd = GetColorZeroAlpha(_tailOutColor);
-
                 _tailInColor = note.transform.Find("EndPoint/EndPointColor").GetComponent<Image>().color;
-                _tailInColorLerpEnd = GetColorZeroAlpha(_tailInColor);
-
                 _bodyOutStartColor = note.transform.Find("OutlineLine").GetComponent<LineRenderer>().startColor;
-                _bodyOutStartColorLerpEnd = GetColorZeroAlpha(_bodyOutStartColor);
-
                 _bodyOutEndColor = note.transform.Find("OutlineLine").GetComponent<LineRenderer>().endColor;
-                _bodyOutEndColorLerpEnd = GetColorZeroAlpha(_bodyOutEndColor);
-
                 _bodyInStartColor = note.transform.Find("Line").GetComponent<LineRenderer>().startColor;
-                _bodyInStartColorLerpEnd = GetColorZeroAlpha(_bodyInStartColor);
-
                 _bodyInEndColor = note.transform.Find("Line").GetComponent<LineRenderer>().endColor;
-                _bodyInEndColorLerpEnd = GetColorZeroAlpha(_bodyInEndColor);
-            }
 
-            public override void Update(GameController __instance)
-            {
-                //Start pos * 2.7f is roughly the complete right of the screen, which means the notes are added as they enter the screen
-                foreach (GameObject currentNote in _allnoteList.Where(n => n.transform.position.x <= START_FADEOUT_POSX * 2.7f && !_activeNotesComponents.Any(c => c.note == n)))
+                foreach (GameObject currentNote in __instance.allnotes.Where(n => n.transform.position.x <= START_FADEOUT_POSX * 2.7f))
                 {
-                    if (currentNote.transform.position.x <= START_FADEOUT_POSX * 2.7f && currentNote.transform.Find("EndPoint").position.x > END_FADEOUT_POSX + 1)
+                    if (currentNote.transform.position.x <= START_FADEOUT_POSX * 2.7f)
                     {
                         var noteComp = new FullNoteComponents()
                         {
@@ -75,59 +54,72 @@ namespace TootTallyGameModifiers
                             endPointColor = currentNote.transform.Find("EndPoint/EndPointColor").GetComponent<Image>(),
                             outlineLine = currentNote.transform.Find("OutlineLine").GetComponent<LineRenderer>(),
                             line = currentNote.transform.Find("Line").GetComponent<LineRenderer>(),
-                            note = currentNote,
                         };
-
-                        noteComp.outlineLine.startColor = _bodyOutStartColor;
-                        noteComp.outlineLine.endColor = _bodyOutEndColor;
-                        noteComp.line.startColor = _bodyInStartColor;
-                        noteComp.line.endColor = _bodyInEndColor;
-                        _activeNotesComponents.Add(noteComp);
+                        _activeNotesComponents.Enqueue(noteComp);
                     }
                 }
+            }
 
-                foreach (FullNoteComponents note in _activeNotesComponents)
+            public static int _counter;
+
+            public override void Update(GameController __instance)
+            {
+                //Start pos * 2.7f is roughly the complete right of the screen, which means the notes are added as they enter the screen
+                for (int i = _counter; i < __instance.allnotes.Count; i++)
                 {
-                    //Fuck 4am coding im tired I wanna sleep
-                    var perc = (note.note.transform.position.x - END_FADEOUT_POSX) / (START_FADEOUT_POSX - END_FADEOUT_POSX);
-                    var percEnd = (note.note.transform.Find("EndPoint").position.x - END_FADEOUT_POSX) / (START_FADEOUT_POSX - END_FADEOUT_POSX);
-                    var lerpStartBy = 1 - Mathf.Clamp(perc, 0, 1);
-                    var lerpEndBy = 1 - Mathf.Clamp(percEnd, 0, 1);
+                    var currentNote = __instance.allnotes[i];
+                    if (_activeNotesComponents.Any(x => x.startPoint.transform.parent.gameObject == currentNote)) continue;
+                    if (currentNote.transform.position.x > START_FADEOUT_POSX * 2.7f) break;
 
-                    note.outlineLine.startColor = Color.Lerp(_bodyOutStartColor, _bodyOutStartColorLerpEnd, lerpStartBy);
-                    note.outlineLine.endColor = Color.Lerp(_bodyOutEndColor, _bodyOutEndColorLerpEnd, lerpEndBy);
+                    //Get all the note's objects that have to fade
+                    var noteComp = new FullNoteComponents()
+                    {
+                        startPoint = currentNote.transform.GetChild(0).GetComponent<Image>(),
+                        startPointColor = currentNote.transform.GetChild(0).GetChild(0).GetComponent<Image>(),
+                        endPoint = currentNote.transform.GetChild(1).GetComponent<Image>(),
+                        endPointColor = currentNote.transform.GetChild(1).GetChild(0).GetComponent<Image>(),
+                        outlineLine = currentNote.transform.GetChild(2).GetComponent<LineRenderer>(),
+                        line = currentNote.transform.GetChild(3).GetComponent<LineRenderer>(),
+                    };
 
-                    note.line.startColor = Color.Lerp(_bodyInStartColor, _bodyInStartColorLerpEnd, lerpStartBy);
-                    note.line.endColor = Color.Lerp(_bodyInEndColor, _bodyInEndColorLerpEnd, lerpEndBy);
-
-                    note.startPoint.color = Color.Lerp(_headOutColor, _headOutColorLerpEnd, lerpStartBy);
-                    note.startPointColor.color = Color.Lerp(_headInColor, _headInColorLerpEnd, lerpStartBy);
-
-                    note.endPoint.color = Color.Lerp(_tailOutColor, _tailOutColorLerpEnd, lerpEndBy);
-                    note.endPointColor.color = Color.Lerp(_tailInColor, _tailInColorLerpEnd, lerpEndBy);
-
-                    if (note.note.transform.Find("EndPoint").position.x <= END_FADEOUT_POSX)
-                        _notesToRemove.Add(note);
-
+                    //Add note to active list
+                    _counter++;
+                    _activeNotesComponents.Enqueue(noteComp);
                 }
 
-                // :SkullEmoji:
-                if (_notesToRemove.Count > 0)
+                for (int i = 0; i < _activeNotesComponents.Count; i++)
                 {
-                    _activeNotesComponents.RemoveAll(_notesToRemove.Contains);
-                    _notesToRemove.Clear();
+                    var note = _activeNotesComponents.ElementAt(i);
+
+                    note.alphaStart.a = 1f - Mathf.Clamp((note.startPoint.transform.position.x - END_FADEOUT_POSX) / (START_FADEOUT_POSX - END_FADEOUT_POSX), 0, 1);
+                    note.alphaEnd.a = 1f - Mathf.Clamp((note.endPoint.transform.position.x - END_FADEOUT_POSX) / (START_FADEOUT_POSX - END_FADEOUT_POSX), 0, 1);
+
+                    note.outlineLine.startColor = _bodyOutStartColor - note.alphaStart;
+                    note.line.startColor = _bodyInStartColor - note.alphaStart;
+                    note.startPoint.color = _headOutColor - note.alphaStart;
+                    note.startPointColor.color = _headInColor - note.alphaStart;
+
+                    note.outlineLine.endColor = _bodyOutEndColor - note.alphaEnd;
+                    note.line.endColor = _bodyInEndColor - note.alphaEnd;
+                    note.endPoint.color = _tailOutColor - note.alphaEnd;
+                    note.endPointColor.color = _tailInColor - note.alphaEnd;
                 }
+
+                while (_activeNotesComponents.Count > 0 && _activeNotesComponents.Peek().endPoint.transform.position.x <= END_FADEOUT_POSX)
+                    _activeNotesComponents.Dequeue();
+
             }
             public class FullNoteComponents
             {
                 public Image startPoint, endPoint;
                 public Image startPointColor, endPointColor;
                 public LineRenderer outlineLine, line;
-                public GameObject note;
-
+                public Color alphaStart, alphaEnd;
+                public FullNoteComponents()
+                {
+                    alphaStart = alphaEnd = Color.black;
+                }
             }
-
-            public static Color GetColorZeroAlpha(Color color) => new(color.r, color.g, color.b, 0);
         }
 
         public class Flashlight : GameModifierBase
@@ -135,46 +127,48 @@ namespace TootTallyGameModifiers
             public override string Name => "FL";
             public override ModifierType ModifierType => ModifierType.Flashlight;
 
+            private VignetteModel.Settings _settings;
+            private Vector2 _pointerPos;
+            private Color _color;
+
             public Flashlight() : base() { }
 
             public override void Initialize(GameController __instance)
             {
-                var rightSquare = new GameObject("FLImage", typeof(Image), typeof(CanvasScaler));
-                var scaler = rightSquare.GetComponent<CanvasScaler>();
-                scaler.referenceResolution = new Vector2(1920, 1080);
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                rightSquare.transform.SetParent(__instance.pointer.transform);
-                rightSquare.transform.position = new Vector3(5, 0, 1);
-                rightSquare.transform.localScale = new Vector2(IsAspect16_10() ? 8.75f : 8.3f, 20);
-                var image = rightSquare.GetComponent<Image>();
-                image.maskable = true;
-                image.color = new Color(0, 0, 0, 1f);
-                var topSquare = GameObject.Instantiate(rightSquare, __instance.pointer.transform);
-                var bottomSquare = GameObject.Instantiate(topSquare, __instance.pointer.transform);
-                var cursorMask = GameObject.Instantiate(topSquare, __instance.pointer.transform);
-
-                topSquare.transform.localScale = new Vector2(8.35f, 3f);
-                topSquare.GetComponent<RectTransform>().pivot = new Vector2(0.5f, -0.45f);
-
-                bottomSquare.transform.localScale = new Vector2(8.35f, 3f);
-                bottomSquare.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 1.49f);
-
-                cursorMask.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-                cursorMask.transform.localScale = Vector2.one * 3f;
-                cursorMask.GetComponent<Image>().sprite = AssetManager.GetSprite("FLMask.png");
-                cursorMask.AddComponent<Mask>();
-
+                __instance.gameplayppp.vignette.enabled = true;
+                _pointerPos = new Vector2(.075f, (__instance.pointer.transform.localPosition.y + 215) / 430);
+                _color = new Color(.3f, .3f, .3f, 1);
+                _settings = new VignetteModel.Settings()
+                {
+                    center = _pointerPos,
+                    color = _color,
+                    intensity = .8f,
+                    mode = VignetteModel.Mode.Classic,
+                    rounded = true,
+                    roundness = 1,
+                    smoothness = 1,
+                };
             }
 
             public override void Update(GameController __instance)
             {
+
+                if (__instance.totalscore != 0)
+                {
+                    _settings.intensity = (180f / Mathf.Min(__instance.defaultnotelength, 180f)) + __instance.breathcounter;
+                    if (__instance.notebuttonpressed && !__instance.outofbreath)
+                    {
+                        _color.r = _color.g = _color.b = 0f;
+                        _color.a = 1f;
+                    }
+                }
+
+
+                _pointerPos.y = (__instance.pointer.transform.localPosition.y + 215) / 430;
+                _settings.center = _pointerPos;
+                _settings.color = _color;
+                __instance.gameplayppp.vignette.settings = _settings;
             }
-
-            private static bool IsAspect16_10() => Camera.main.aspect < 1.7f && Camera.main.aspect >= 1.6f;
-            private static bool IsAspect16_9() => Camera.main.aspect >= 1.7f;
-            private static bool IsAspect3_2() => Camera.main.aspect < 1.6f && Camera.main.aspect >= 1.5f;
-            private static bool IsAspect4_3() => Camera.main.aspect < 1.5f;
-
         }
 
         public class Brutal : GameModifierBase
