@@ -23,12 +23,12 @@ namespace TootTallyGameModifiers
             public static Color _tailOutColor, _tailInColor;
             public static Color _bodyOutStartColor, _bodyOutEndColor;
             public static Color _bodyInStartColor, _bodyInEndColor;
-            public static readonly float START_FADEOUT_POSX = 4f;
-            public static readonly float END_FADEOUT_POSX = -0.8f;
+            public static readonly float START_FADEOUT_POSX = 3.5f;
+            public static readonly float END_FADEOUT_POSX = -1.6f;
 
             public override void Initialize(GameController __instance)
             {
-                _counter = 0;
+                _counter = 1;
                 _activeNotesComponents = new Queue<FullNoteComponents>();
 
                 //Doing all this to make sure its future proof in case cosmetic plugin changes the outline colors or some shit
@@ -42,7 +42,7 @@ namespace TootTallyGameModifiers
                 _bodyInStartColor = note.transform.Find("Line").GetComponent<LineRenderer>().startColor;
                 _bodyInEndColor = note.transform.Find("Line").GetComponent<LineRenderer>().endColor;
 
-                foreach (GameObject currentNote in __instance.allnotes.Where(n => n.transform.position.x <= START_FADEOUT_POSX * 2.7f))
+                foreach (GameObject currentNote in __instance.allnotes.Skip(1).Where(n => n.transform.position.x <= START_FADEOUT_POSX * 2.7f))
                 {
                     if (currentNote.transform.position.x <= START_FADEOUT_POSX * 2.7f)
                     {
