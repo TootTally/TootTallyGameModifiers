@@ -125,7 +125,7 @@ namespace TootTallyGameModifiers
         {
             if (_modifierPanel == null) return;
             if (_modifierPanel.activeSelf)
-                TootTallyNotifManager.DisplayNotif("Stop trying to breaking my stuff... -_-", Color.white);
+                TootTallyNotifManager.DisplayNotif("Stop trying to breaking my stuff... -_-");
             _canClickButtons = false;
 
             _modifierPanel.SetActive(true);
@@ -164,14 +164,14 @@ namespace TootTallyGameModifiers
             {
                 TootTallyAnimationManager.AddNewEulerAngleAnimation(_modifierButtonDict[modifierType], new Vector3(0, 0, 8), 0.15f, new SecondDegreeDynamicsAnimation(2.5f, 1f, 2.5f), sender => { _canClickButtons = true; });
                 _modifierButtonDict[modifierType].transform.Find("glow").gameObject.SetActive(true);
-                TootTallyNotifManager.DisplayNotif($"{modifierType} mod enabled.", Color.white);
+                TootTallyNotifManager.DisplayNotif($"{modifierType} mod enabled.");
                 Add(modifierType);
                 return;
             }
 
             TootTallyAnimationManager.AddNewEulerAngleAnimation(_modifierButtonDict[modifierType], Vector3.zero, 0.15f, new SecondDegreeDynamicsAnimation(2.5f, 1f, 2.5f), sender => { _canClickButtons = true; });
             _modifierButtonDict[modifierType].transform.Find("glow").gameObject.SetActive(false);
-            TootTallyNotifManager.DisplayNotif($"{modifierType} mod disabled.", Color.white);
+            TootTallyNotifManager.DisplayNotif($"{modifierType} mod disabled.");
             Remove(modifierType);
         }
 
