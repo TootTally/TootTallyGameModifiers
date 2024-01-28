@@ -4,7 +4,7 @@
 		<TargetFramework>net472</TargetFramework>
 		<AssemblyName>TootTallyGameModifiers</AssemblyName>
 		<Description>Gameplay modifiers for global leaderboards and for fun</Description>
-		<Version>1.1.5</Version>
+		<Version>1.1.6</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<TromboneChampDir>E:\SteamLibrary\steamapps\common\TromboneChamp</TromboneChampDir>
@@ -29,9 +29,6 @@
 		<Reference Include="TootTallyCore">
 			<HintPath>$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallyCore\TootTallyCore.dll</HintPath>
 		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
 		<Reference Include="TootTallySettings">
 			<HintPath>$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallySettings\TootTallySettings.dll</HintPath>
 		</Reference>

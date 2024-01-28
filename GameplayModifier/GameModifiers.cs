@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TootTallyCore.Utils.TootTallyGlobals;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 using UnityEngine.UI;
@@ -225,7 +226,7 @@ namespace TootTallyGameModifiers
 
             public override void SpecialUpdate(GameController __instance)
             {
-                if (!__instance.paused && !__instance.quitting && !__instance.retrying && !__instance.level_finished)
+                if (!__instance.paused && !__instance.quitting && !__instance.retrying && !__instance.level_finished && !TootTallyGlobalVariables.isSpectating && !TootTallyGlobalVariables.isReplaying)
                 {
                     __instance.notebuttonpressed = false;
                     __instance.musictrack.Pause();
