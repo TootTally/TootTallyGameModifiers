@@ -5,6 +5,7 @@ using HarmonyLib;
 using System.IO;
 using TootTallyCore.Utils.Assets;
 using TootTallyCore.Utils.TootTallyModules;
+using TootTallySettings.TootTallySettingsObjects;
 
 namespace TootTallyGameModifiers
 {
@@ -20,6 +21,8 @@ namespace TootTallyGameModifiers
 
         //Change this name to whatever you want
         public string Name { get => PluginInfo.PLUGIN_NAME; set => Name = value; }
+
+        public static TootTallySettingSlider StartFadeoutInput, EndFadeoutInput;
 
         public static void LogInfo(string msg) => Instance.Logger.LogInfo(msg);
         public static void LogError(string msg) => Instance.Logger.LogError(msg);
@@ -42,7 +45,14 @@ namespace TootTallyGameModifiers
 
         public void LoadModule()
         {
+            string configPath = Path.Combine(Paths.BepInExRootPath, "config/");
+            ConfigFile config = new ConfigFile(configPath + "Hidden.cfg", true);
+            StartFade = config.Bind("Hidden", "StartFade", 3.5f, "Position at which the fade Starts for hidden.");
+            EndFade = config.Bind("Hidden", "EndFade", -1.6f, "Position at which the fade Ends for hidden.");
+
             AssetManager.LoadAssets(Path.Combine(Path.GetDirectoryName(Instance.Info.Location), "Assets"));
+            /*StartFadeoutInput = TootTallySettings.Plugin.MainTootTallySettingPage.AddSlider("Start Fadeout", -25, 25, 500, "HD StartFade", StartFade, false);
+            EndFadeoutInput = TootTallySettings.Plugin.MainTootTallySettingPage.AddSlider("End Fadeout", -25, 25, 500, "HD EndFade", EndFade, false);*/
             _harmony.PatchAll(typeof(GameModifierManager));
             LogInfo($"Module loaded!");
         }
@@ -52,5 +62,6 @@ namespace TootTallyGameModifiers
             _harmony.UnpatchSelf();
             LogInfo($"Module unloaded!");
         }
+        ConfigEntry<float> StartFade, EndFade;
     }
 }

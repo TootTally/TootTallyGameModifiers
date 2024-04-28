@@ -4,12 +4,12 @@ using TootTallyCore.Utils.TootTallyGlobals;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 using UnityEngine.UI;
-using static Unity.Audio.Handle;
 
 namespace TootTallyGameModifiers
 {
     public static class GameModifiers
     {
+        
 
         public class Hidden : GameModifierBase
         {
@@ -19,13 +19,13 @@ namespace TootTallyGameModifiers
 
             public Hidden() : base() { }
 
-            public static Queue<FullNoteComponents> _activeNotesComponents;
-            public static Color _headOutColor, _headInColor;
-            public static Color _tailOutColor, _tailInColor;
-            public static Color _bodyOutStartColor, _bodyOutEndColor;
-            public static Color _bodyInStartColor, _bodyInEndColor;
-            public static readonly float START_FADEOUT_POSX = 3.5f;
-            public static readonly float END_FADEOUT_POSX = -1.6f;
+            public Queue<FullNoteComponents> _activeNotesComponents;
+            public Color _headOutColor, _headInColor;
+            public Color _tailOutColor, _tailInColor;
+            public Color _bodyOutStartColor, _bodyOutEndColor;
+            public Color _bodyInStartColor, _bodyInEndColor;
+            public static float START_FADEOUT_POSX = 3.5f;
+            public static float END_FADEOUT_POSX = -1.6f;
 
             public override void Initialize(GameController __instance)
             {
@@ -43,9 +43,9 @@ namespace TootTallyGameModifiers
                 _bodyInStartColor = note.transform.Find("Line").GetComponent<LineRenderer>().startColor;
                 _bodyInEndColor = note.transform.Find("Line").GetComponent<LineRenderer>().endColor;
 
-                foreach (GameObject currentNote in __instance.allnotes.Skip(1).Where(n => n.transform.position.x <= START_FADEOUT_POSX * 2.7f))
+                foreach (GameObject currentNote in __instance.allnotes.Skip(1).Where(n => n.transform.position.x <= START_FADEOUT_POSX + 9.4f))
                 {
-                    if (currentNote.transform.position.x <= START_FADEOUT_POSX * 2.7f)
+                    if (currentNote.transform.position.x <= START_FADEOUT_POSX + 9.4f)
                     {
                         var noteComp = new FullNoteComponents()
                         {
@@ -61,6 +61,12 @@ namespace TootTallyGameModifiers
                 }
             }
 
+            public static void SetFadeOutValues(float startFadeOut, float endFadeOut)
+            {
+                START_FADEOUT_POSX = startFadeOut;
+                END_FADEOUT_POSX = endFadeOut;
+            }
+
             public static int _counter;
 
             public override void Update(GameController __instance)
@@ -70,7 +76,7 @@ namespace TootTallyGameModifiers
                 {
                     var currentNote = __instance.allnotes[i];
                     if (_activeNotesComponents.Any(x => x.startPoint.transform.parent.gameObject == currentNote)) continue;
-                    if (currentNote.transform.position.x > START_FADEOUT_POSX * 2.7f) break;
+                    if (currentNote.transform.position.x > START_FADEOUT_POSX + 9.4f) break;
 
                     //Get all the note's objects that have to fade
                     var noteComp = new FullNoteComponents()
