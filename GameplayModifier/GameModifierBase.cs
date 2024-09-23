@@ -10,9 +10,6 @@
 
         public virtual void SpecialUpdate(GameController __instance) { }
 
-        public virtual void Remove()
-        {
-            GameModifierManager.Remove(Metadata.ModifierType);
-        }
+        public virtual void Remove() => GameModifierManager.Remove(Metadata.ModifierType);
     }
 }

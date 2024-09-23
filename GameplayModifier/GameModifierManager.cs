@@ -9,14 +9,14 @@ namespace TootTallyGameModifiers
     {
         private static bool _isInitialized;
         private static List<GameModifierBase> _modifierTypesToRemove;
-        private static Dictionary<string, GameModifiers.ModifierType> _stringModifierDict;
+        private static Dictionary<string, GameModifiers.Metadata> _stringModifierDict;
         private static Dictionary<GameModifiers.ModifierType, GameModifierBase> _gameModifierDict;
         private static Dictionary<GameModifiers.ModifierType, ModifierButton> _modifierButtonDict;
         private static string _modifiersBackup;
 
         [HarmonyPatch(typeof(HomeController), nameof(HomeController.Start))]
         [HarmonyPostfix]
-        public static void OnHomeControllerStartInitialize()
+        static void OnHomeControllerStartInitialize()
         {
             if (!_isInitialized) Initialize();
         }
@@ -42,16 +42,16 @@ namespace TootTallyGameModifiers
             __instance.sortdrop.transform.SetAsLastSibling();
         }
 
-        public static void Initialize()
+        static void Initialize()
         {
             _gameModifierDict = new Dictionary<GameModifiers.ModifierType, GameModifierBase>();
             _modifierButtonDict = new Dictionary<GameModifiers.ModifierType, ModifierButton>();
-            _stringModifierDict = new Dictionary<string, GameModifiers.ModifierType>()
+            _stringModifierDict = new Dictionary<string, GameModifiers.Metadata>()
             {
-                {"HD", GameModifiers.ModifierType.Hidden },
-                {"FL", GameModifiers.ModifierType.Flashlight },
-                {"BT", GameModifiers.ModifierType.Brutal },
-                {"IF", GameModifiers.ModifierType.InstaFail },
+                {"HD", GameModifiers.HIDDEN },
+                {"FL", GameModifiers.FLASHLIGHT },
+                {"BT", GameModifiers.BRUTAL },
+                {"IF", GameModifiers.INSTA_FAIL },
             };
             _modifierTypesToRemove = new List<GameModifierBase>();
             _modifiersBackup = "None";
@@ -77,7 +77,7 @@ namespace TootTallyGameModifiers
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Start))]
         [HarmonyPostfix]
-        public static void InitializeModifers(GameController __instance)
+        static void InitializeModifers(GameController __instance)
         {
             if (!_isInitialized) return;
 
@@ -93,7 +93,7 @@ namespace TootTallyGameModifiers
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Update))]
         [HarmonyPostfix]
-        public static void UpdateModifiers(GameController __instance)
+        static void UpdateModifiers(GameController __instance)
         {
             if (!_isInitialized) return;
 
@@ -105,7 +105,7 @@ namespace TootTallyGameModifiers
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.doScoreText))]
         [HarmonyPostfix]
-        public static void UpdateBrutalMode(GameController __instance, int whichtext)
+        static void UpdateBrutalMode(GameController __instance, int whichtext)
         {
             if (!_isInitialized) return;
 
@@ -126,9 +126,9 @@ namespace TootTallyGameModifiers
             _modifierTypesToRemove.Clear();
         }
 
-        public static string GetModifiersString() => _gameModifierDict.Count > 0 ? _gameModifierDict.Values.Join(mod => mod.Metadata.Name, ",") : "None";
+        public static string GetModifiersString() => _gameModifierDict.Count > 0 ? _gameModifierDict.Values.Join(mod => mod.Metadata.Name, ",") : "";
 
-        public static void Add(GameModifiers.ModifierType modifierType)
+        internal static void Add(GameModifiers.ModifierType modifierType)
         {
             if (_gameModifierDict.ContainsKey(modifierType))
             {
@@ -152,7 +152,7 @@ namespace TootTallyGameModifiers
             };
         }
 
-        public static void Remove(GameModifiers.ModifierType modifierType)
+        internal static void Remove(GameModifiers.ModifierType modifierType)
         {
             _gameModifierDict.Remove(modifierType);
         }
@@ -161,21 +161,16 @@ namespace TootTallyGameModifiers
         {
             _modifiersBackup = GetModifiersString();
             ClearAllModifiers();
-            if (replayModifierString == null) return;
+            var modifierTypes = GetModifierSet(replayModifierString);
+            foreach (var modType in modifierTypes) Add(modType.ModifierType);
+        }
 
-            var replayModifierStringArray = replayModifierString.Split(',');
-            if (replayModifierStringArray.Length <= 0)
-            {
-                Plugin.LogInfo("No modifiers detected.");
-                return;
-            }
-
-            Plugin.LogInfo($"Loading {replayModifierString} modifiers.");
-            foreach (string modName in replayModifierString.Split(','))
-            {
-                if (_stringModifierDict.ContainsKey(modName))
-                    Add(_stringModifierDict[modName]);
-            }
+        public static HashSet<GameModifiers.Metadata> GetModifierSet(string replayModifierString)
+        {
+            if (replayModifierString == null) return new HashSet<GameModifiers.Metadata>();
+            return new HashSet<GameModifiers.Metadata>(replayModifierString.Split(',')
+                .Where(modName => _stringModifierDict.ContainsKey(modName))
+                .Select(modName => _stringModifierDict[modName]));
         }
 
         public static void LoadBackedupModifiers() => LoadModifiersFromString(_modifiersBackup);

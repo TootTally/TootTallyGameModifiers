@@ -24,7 +24,7 @@ public class ModifierButton
         var sprite = AssetManager.GetSprite($"{modifier.Name}.png");
         this.active = active;
         this.modifier = modifier;
-        button = GameObjectFactory.CreateCustomButton(transform, Vector2.zero, size, sprite, name, onClick ?? Toggle);
+        button = GameObjectFactory.CreateCustomButton(transform, Vector2.zero, size, sprite, name, onClick);
         var gameObject = button.gameObject;
         var bubble = GameObjectFactory.CreateBubble(Vector2.zero, name + "Bubble", modifier.Description, new Vector2(1f, 0f), bubbleBorder, true, fontSize);
         gameObject.AddComponent<BubblePopupHandler>().Initialize(bubble, useWorldPosition);
@@ -41,14 +41,6 @@ public class ModifierButton
         if (active) ToggleOn(); else ToggleOff();
         RectTransform component2 = gameObject.GetComponent<RectTransform>();
         component2.pivot = Vector2.one / 2f;
-    }
-
-    public void Toggle()
-    {
-        if (!canClickButtons) return;
-        canClickButtons = false;
-        active = !active;
-        if (active) ToggleOn(); else ToggleOff();
     }
 
     public void ToggleOn()
