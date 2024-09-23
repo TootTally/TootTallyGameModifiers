@@ -24,7 +24,7 @@ namespace TootTallyGameModifiers
         static void AddButton(Transform transform, GameModifiers.Metadata mod)
         {
             var active = _gameModifierDict.ContainsKey(mod.ModifierType);
-            var button = new ModifierButton(transform, mod, active, new Vector2(32, 32), 8, true, delegate { Toggle(mod.ModifierType); });
+            var button = new ModifierButton(transform, mod, active, new Vector2(32, 32), 3, 8, true, delegate { Toggle(mod.ModifierType); });
             _modifierButtonDict.Add(mod.ModifierType, button);
         }
 
@@ -33,15 +33,12 @@ namespace TootTallyGameModifiers
         static void OnLevelSelectControllerStartPostfix(LevelSelectController __instance)
         {
             _modifierButtonDict.Clear();
-
-            var popup = GameModifierFactory.CreateModifiersPopup(__instance.fullpanel.transform, new Vector2(-420, -150), new Vector2(32, 32), __instance.fullpanel.transform, new Vector2(175, 125), 20, new Vector2(16, 16));
+            var popup = GameModifierFactory.CreateModifiersPopup(__instance.fullpanel.transform, new Vector2(-420, -150), new Vector2(32, 32), __instance.fullpanel.transform, new Vector2(175, 125), 20, new Vector2(20, 20));
             var hContainer = GameModifierFactory.CreatePopupContainer(popup, new Vector2(0, 65), 15, 2);
-
             AddButton(hContainer.transform, GameModifiers.HIDDEN);
             AddButton(hContainer.transform, GameModifiers.FLASHLIGHT);
             AddButton(hContainer.transform, GameModifiers.BRUTAL);
             AddButton(hContainer.transform, GameModifiers.INSTA_FAIL);
-
             __instance.sortdrop.transform.SetAsLastSibling();
         }
 
@@ -120,7 +117,6 @@ namespace TootTallyGameModifiers
                 _gameModifierDict.TryGetValue(GameModifiers.ModifierType.InstaFail, out GameModifierBase instaFail);
                 instaFail?.SpecialUpdate(__instance);
             }
-            
         }
 
         public static void ClearAllModifiers()

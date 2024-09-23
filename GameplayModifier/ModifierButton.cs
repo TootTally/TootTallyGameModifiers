@@ -18,7 +18,7 @@ public class ModifierButton
     private GameObject glow;
     private SecondDegreeDynamicsAnimation anim = new SecondDegreeDynamicsAnimation(2.5f, 1f, 2.5f);
 
-    public ModifierButton(Transform transform, GameModifiers.Metadata modifier, bool active, Vector2 size, int fontSize, bool useWorldPosition, Action onClick = null)
+    public ModifierButton(Transform transform, GameModifiers.Metadata modifier, bool active, Vector2 size, int bubbleBorder, int fontSize, bool useWorldPosition, Action onClick = null)
     {
         var name = modifier.ModifierType.ToString();
         var sprite = AssetManager.GetSprite($"{modifier.Name}.png");
@@ -26,7 +26,7 @@ public class ModifierButton
         this.modifier = modifier;
         button = GameObjectFactory.CreateCustomButton(transform, Vector2.zero, size, sprite, name, onClick ?? Toggle);
         var gameObject = button.gameObject;
-        var bubble = GameObjectFactory.CreateBubble(Vector2.zero, name + "Bubble", modifier.Description, 6, true, fontSize);
+        var bubble = GameObjectFactory.CreateBubble(Vector2.zero, name + "Bubble", modifier.Description, new Vector2(1f, 0f), bubbleBorder, true, fontSize);
         gameObject.AddComponent<BubblePopupHandler>().Initialize(bubble, useWorldPosition);
 
         glow = new GameObject("glow", typeof(Image));
@@ -53,12 +53,14 @@ public class ModifierButton
 
     public void ToggleOn()
     {
+        active = true;
         TootTallyAnimationManager.AddNewEulerAngleAnimation(button.gameObject, new Vector3(0, 0, 8), 0.15f, anim, sender => { canClickButtons = true; });
         glow.SetActive(true);
     }
 
     public void ToggleOff()
     {
+        active = false;
         TootTallyAnimationManager.AddNewEulerAngleAnimation(button.gameObject, Vector3.zero, 0.15f, anim, sender => { canClickButtons = true; });
         glow.SetActive(false);
     }

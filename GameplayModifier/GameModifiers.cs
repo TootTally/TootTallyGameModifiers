@@ -136,8 +136,6 @@ namespace TootTallyGameModifiers
             private Vector2 _pointerPos;
             private Color _color;
 
-            public Flashlight() : base() { }
-
             public override void Initialize(GameController __instance)
             {
                 __instance.gameplayppp.vignette.enabled = true;
