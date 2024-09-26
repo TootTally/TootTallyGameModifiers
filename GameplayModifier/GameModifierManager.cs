@@ -8,7 +8,6 @@ namespace TootTallyGameModifiers
     public static class GameModifierManager
     {
         private static bool _isInitialized;
-        private static List<GameModifierBase> _modifierTypesToRemove;
         private static Dictionary<string, GameModifiers.Metadata> _stringModifierDict;
         private static Dictionary<GameModifiers.ModifierType, GameModifierBase> _gameModifierDict;
         private static Dictionary<GameModifiers.ModifierType, ModifierButton> _modifierButtonDict;
@@ -53,26 +52,8 @@ namespace TootTallyGameModifiers
                 {"BT", GameModifiers.BRUTAL },
                 {"IF", GameModifiers.INSTA_FAIL },
             };
-            _modifierTypesToRemove = new List<GameModifierBase>();
             _modifiersBackup = "None";
             _isInitialized = true;
-        }
-
-        public static void Toggle(GameModifiers.ModifierType modifierType)
-        {
-            var button = _modifierButtonDict[modifierType];
-            if (!button.canClickButtons) return;
-            button.canClickButtons = false;
-            if (!_gameModifierDict.ContainsKey(modifierType))
-            {
-                button.ToggleOn();
-                Add(modifierType);
-            }
-            else
-            {
-                button.ToggleOff();
-                Remove(modifierType);
-            }
         }
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Start))]
@@ -119,12 +100,24 @@ namespace TootTallyGameModifiers
             }
         }
 
-        public static void ClearAllModifiers()
+        public static void Toggle(GameModifiers.ModifierType modifierType)
         {
-            _modifierTypesToRemove.AddRange(_gameModifierDict.Values.ToArray());
-            _modifierTypesToRemove.Do(mod => mod.Remove());
-            _modifierTypesToRemove.Clear();
+            var button = _modifierButtonDict[modifierType];
+            if (!button.canClickButtons) return;
+            button.canClickButtons = false;
+            if (!_gameModifierDict.ContainsKey(modifierType))
+            {
+                button.ToggleOn();
+                Add(modifierType);
+            }
+            else
+            {
+                button.ToggleOff();
+                Remove(modifierType);
+            }
         }
+
+        public static void ClearAllModifiers() => _gameModifierDict.Clear();
 
         public static string GetModifiersString() => _gameModifierDict.Count > 0 ? _gameModifierDict.Values.Join(mod => mod.Metadata.Name, ",") : "";
 
@@ -135,22 +128,17 @@ namespace TootTallyGameModifiers
                 Plugin.LogInfo($"Modifier of type {modifierType} is already in the modifier list.");
                 return;
             }
-            switch (modifierType)
-            {
-                case GameModifiers.ModifierType.Hidden:
-                    _gameModifierDict.Add(GameModifiers.ModifierType.Hidden, new GameModifiers.Hidden());
-                    break;
-                case GameModifiers.ModifierType.Flashlight:
-                    _gameModifierDict.Add(GameModifiers.ModifierType.Flashlight, new GameModifiers.Flashlight());
-                    break;
-                case GameModifiers.ModifierType.Brutal:
-                    _gameModifierDict.Add(GameModifiers.ModifierType.Brutal, new GameModifiers.Brutal());
-                    break;
-                case GameModifiers.ModifierType.InstaFail:
-                    _gameModifierDict.Add(GameModifiers.ModifierType.InstaFail, new GameModifiers.InstaFail());
-                    break;
-            };
+            _gameModifierDict.Add(modifierType, CreateGameModifier(modifierType));
         }
+
+        private static GameModifierBase CreateGameModifier(GameModifiers.ModifierType modifierType) => modifierType switch
+        {
+            GameModifiers.ModifierType.Hidden => new GameModifiers.Hidden(),
+            GameModifiers.ModifierType.Flashlight => new GameModifiers.Flashlight(),
+            GameModifiers.ModifierType.Brutal => new GameModifiers.Brutal(),
+            GameModifiers.ModifierType.InstaFail => new GameModifiers.InstaFail(),
+            _ => throw new System.NotImplementedException(),
+        };
 
         internal static void Remove(GameModifiers.ModifierType modifierType)
         {
@@ -174,6 +162,5 @@ namespace TootTallyGameModifiers
         }
 
         public static void LoadBackedupModifiers() => LoadModifiersFromString(_modifiersBackup);
-
     }
 }
