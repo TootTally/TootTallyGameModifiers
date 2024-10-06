@@ -13,7 +13,7 @@ public class ModifierButton
     public CustomButton button;
     public bool active;
     public GameModifiers.Metadata modifier;
-    public bool canClickButtons = true;
+    public bool onCooldown = false;
 
     private GameObject glow;
     private SecondDegreeDynamicsAnimation anim = new SecondDegreeDynamicsAnimation(2.5f, 1f, 2.5f);
@@ -46,14 +46,14 @@ public class ModifierButton
     public void ToggleOn()
     {
         active = true;
-        TootTallyAnimationManager.AddNewEulerAngleAnimation(button.gameObject, new Vector3(0, 0, 8), 0.15f, anim, sender => { canClickButtons = true; });
+        TootTallyAnimationManager.AddNewEulerAngleAnimation(button.gameObject, new Vector3(0, 0, 8), 0.15f, anim, sender => { onCooldown = false; });
         glow.SetActive(true);
     }
 
     public void ToggleOff()
     {
         active = false;
-        TootTallyAnimationManager.AddNewEulerAngleAnimation(button.gameObject, Vector3.zero, 0.15f, anim, sender => { canClickButtons = true; });
+        TootTallyAnimationManager.AddNewEulerAngleAnimation(button.gameObject, Vector3.zero, 0.15f, anim, sender => { onCooldown = false; });
         glow.SetActive(false);
     }
 }

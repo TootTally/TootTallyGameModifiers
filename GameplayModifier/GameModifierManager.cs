@@ -52,7 +52,7 @@ namespace TootTallyGameModifiers
                 {"BT", GameModifiers.BRUTAL },
                 {"IF", GameModifiers.INSTA_FAIL },
             };
-            _modifiersBackup = "None";
+            _modifiersBackup = "";
             _isInitialized = true;
         }
 
@@ -103,8 +103,8 @@ namespace TootTallyGameModifiers
         public static void Toggle(GameModifiers.ModifierType modifierType)
         {
             var button = _modifierButtonDict[modifierType];
-            if (!button.canClickButtons) return;
-            button.canClickButtons = false;
+            if (button.onCooldown) return;
+            button.onCooldown = true;
             if (!_gameModifierDict.ContainsKey(modifierType))
             {
                 button.ToggleOn();
