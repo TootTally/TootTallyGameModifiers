@@ -25,6 +25,7 @@ namespace TootTallyGameModifiers
             public Color _bodyInStartColor, _bodyInEndColor;
             public static float START_FADEOUT_POSX = 3.5f;
             public static float END_FADEOUT_POSX = -1.6f;
+            public static int _counter;
 
             public override void Initialize(GameController __instance)
             {
@@ -65,8 +66,6 @@ namespace TootTallyGameModifiers
                 START_FADEOUT_POSX = startFadeOut;
                 END_FADEOUT_POSX = endFadeOut;
             }
-
-            public static int _counter;
 
             public override void Update(GameController __instance)
             {
