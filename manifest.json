@@ -1,0 +1,12 @@
+{
+    "name": "TootTallyGameModifiers",
+    "version_number": "1.1.7",
+    "website_url": "https://github.com/TootTally/TootTallyCore",
+    "description": "TootTally's extra game modifiers such as Hidden, Flashlight and Brutal.",
+    "dependencies": [
+        "TootTally-TootTallyCore-1.1.0",
+        "TromboneChamps-TrombLoader-2.2.1",
+        "TromboneChamps-BaboonAPI-2.5.0",
+        "BepInEx-BepInExPack_TromboneChamp-5.4.21"
+    ]
+}

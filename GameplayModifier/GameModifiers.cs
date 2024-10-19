@@ -9,15 +9,14 @@ namespace TootTallyGameModifiers
 {
     public static class GameModifiers
     {
-        
+        public static Metadata HIDDEN = new Metadata("HD", ModifierType.Hidden, "Hidden: Notes will disappear as they\n approach the left");
+        public static Metadata FLASHLIGHT = new Metadata("FL", ModifierType.Flashlight, "Flashlight: Only a small circle around the\n cursor is visible");
+        public static Metadata BRUTAL = new Metadata("BT", ModifierType.Brutal, "Brutal: Game will speed up if you do good and\n slow down when you are bad");
+        public static Metadata INSTA_FAIL = new Metadata("IF", ModifierType.InstaFail, "Insta Fail: Restart the song as soon as you miss");
 
         public class Hidden : GameModifierBase
         {
-            public override string Name => "HD";
-
-            public override ModifierType ModifierType => ModifierType.Hidden;
-
-            public Hidden() : base() { }
+            public override Metadata Metadata => HIDDEN;
 
             public Queue<FullNoteComponents> _activeNotesComponents;
             public Color _headOutColor, _headInColor;
@@ -26,6 +25,7 @@ namespace TootTallyGameModifiers
             public Color _bodyInStartColor, _bodyInEndColor;
             public static float START_FADEOUT_POSX = 3.5f;
             public static float END_FADEOUT_POSX = -1.6f;
+            public static int _counter;
 
             public override void Initialize(GameController __instance)
             {
@@ -66,8 +66,6 @@ namespace TootTallyGameModifiers
                 START_FADEOUT_POSX = startFadeOut;
                 END_FADEOUT_POSX = endFadeOut;
             }
-
-            public static int _counter;
 
             public override void Update(GameController __instance)
             {
@@ -114,8 +112,8 @@ namespace TootTallyGameModifiers
 
                 while (_activeNotesComponents.Count > 0 && _activeNotesComponents.Peek().endPoint.transform.position.x <= END_FADEOUT_POSX)
                     _activeNotesComponents.Dequeue();
-
             }
+
             public class FullNoteComponents
             {
                 public Image startPoint, endPoint;
@@ -131,14 +129,11 @@ namespace TootTallyGameModifiers
 
         public class Flashlight : GameModifierBase
         {
-            public override string Name => "FL";
-            public override ModifierType ModifierType => ModifierType.Flashlight;
+            public override Metadata Metadata => FLASHLIGHT;
 
             private VignetteModel.Settings _settings;
             private Vector2 _pointerPos;
             private Color _color;
-
-            public Flashlight() : base() { }
 
             public override void Initialize(GameController __instance)
             {
@@ -180,9 +175,7 @@ namespace TootTallyGameModifiers
 
         public class Brutal : GameModifierBase
         {
-            public override string Name => "BT";
-
-            public override ModifierType ModifierType => ModifierType.Brutal;
+            public override Metadata Metadata => BRUTAL;
 
             private float _defaultSpeed;
             private float _speed;
@@ -220,15 +213,9 @@ namespace TootTallyGameModifiers
             }
         }
 
-        public class InstaFails : GameModifierBase
+        public class InstaFail : GameModifierBase
         {
-            public override string Name => "IF";
-
-            public override ModifierType ModifierType => ModifierType.InstaFail;
-
-            public override void Initialize(GameController __instance) { }
-
-            public override void Update(GameController __instance) { }
+            public override Metadata Metadata => INSTA_FAIL;
 
             public override void SpecialUpdate(GameController __instance)
             {
@@ -241,7 +228,20 @@ namespace TootTallyGameModifiers
                     __instance.pauseRetryLevel();
                 }
             }
+        }
 
+        public readonly struct Metadata
+        {
+            public string Name { get; }
+            public ModifierType ModifierType { get; }
+            public string Description { get; }
+
+            public Metadata(string name, ModifierType modifierType, string description)
+            {
+                Name = name;
+                ModifierType = modifierType;
+                Description = description;
+            }
         }
 
         public enum ModifierType
