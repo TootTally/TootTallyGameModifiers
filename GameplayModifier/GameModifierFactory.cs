@@ -11,14 +11,16 @@ public static class GameModifierFactory
         return new CustomPopup("Modifiers", buttonTransform, buttonAnchoredPosition, buttonSize, AssetManager.GetSprite("ModifierButton.png"), popupTransform, popupSize, titleFontSize, closeButtonSize);
     }
 
-    public static GameObject CreatePopupContainer(CustomPopup popup, Vector2 size, int padding, float spacing)
+    public static GameObject CreatePopupContainer(CustomPopup popup, Vector2 size)
     {
         var container = popup.popupBox.transform.GetChild(0).gameObject;
         var hContainer = GetHorizontalBox(size, container.transform);
-        var horizontalLayout = hContainer.GetComponent<HorizontalLayoutGroup>();
-        horizontalLayout.padding = new RectOffset(padding, padding, padding, padding);
-        horizontalLayout.spacing = spacing;
-        horizontalLayout.childAlignment = TextAnchor.UpperCenter;
+        GameObject.DestroyImmediate(hContainer.GetComponent<HorizontalLayoutGroup>());
+        var gridLayout = hContainer.AddComponent<GridLayoutGroup>();
+        //gridLayout.padding = new RectOffset(padding, padding, padding, padding);
+        //gridLayout.spacing = spacing;
+        gridLayout.cellSize = Vector2.one * 32;
+        gridLayout.childAlignment = TextAnchor.UpperCenter;
         return hContainer;
     }
 

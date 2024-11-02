@@ -9,10 +9,14 @@ namespace TootTallyGameModifiers
 {
     public static class GameModifiers
     {
-        public static Metadata HIDDEN = new Metadata("HD", ModifierType.Hidden, "Hidden: Notes will disappear as they\n approach the left");
-        public static Metadata FLASHLIGHT = new Metadata("FL", ModifierType.Flashlight, "Flashlight: Only a small circle around the\n cursor is visible");
-        public static Metadata BRUTAL = new Metadata("BT", ModifierType.Brutal, "Brutal: Game will speed up if you do good and\n slow down when you are bad");
-        public static Metadata INSTA_FAIL = new Metadata("IF", ModifierType.InstaFail, "Insta Fail: Restart the song as soon as you miss");
+        public static Metadata HIDDEN = new Metadata("HD", ModifierType.Hidden, "Hidden: Notes will disappear as they\n approach the left", true);
+        public static Metadata FLASHLIGHT = new Metadata("FL", ModifierType.Flashlight, "Flashlight: Only a small circle around the\n cursor is visible", true);
+        public static Metadata BRUTAL = new Metadata("BT", ModifierType.Brutal, "Brutal: Game will speed up if you do good and\n slow down when you are bad (Unrated)", false);
+        public static Metadata INSTA_FAIL = new Metadata("IF", ModifierType.InstaFail, "Insta Fail: Restart the song as soon as you miss", true);
+        public static Metadata EASY_MODE = new Metadata("EZ", ModifierType.EasyMode, "Easy Mode: Lower the threshold for combo and champ break (Unrated)", false);
+        public static Metadata STRICT_MODE = new Metadata("ST", ModifierType.StrictMode, "Strict Mode: Note timing becomes significantly more strict (Unrated)", false);
+        public static Metadata AUTO_TUNE = new Metadata("AT", ModifierType.AutoTune, "Auto Tune: Snaps to standard grid and slides (Unrated)", false);
+        public static Metadata HIDDEN_CURSOR = new Metadata("HC", ModifierType.HiddenCursor, "Hidden Cursor: Make the cursor invisible", true);
 
         public class Hidden : GameModifierBase
         {
@@ -230,17 +234,82 @@ namespace TootTallyGameModifiers
             }
         }
 
+        public class EasyMode : GameModifierBase
+        {
+            public override Metadata Metadata => EASY_MODE;
+
+            public override void SpecialUpdate(GameController __instance)
+            {
+                __instance.notescoreaverage = Mathf.Clamp(__instance.notescoreaverage * 1.15f, 0, 100);
+            }
+
+        }
+
+        public class StrictMode : GameModifierBase
+        {
+            public override Metadata Metadata => STRICT_MODE;
+
+            public override void Update(GameController __instance)
+            {
+                float num8 = __instance.noteholderr.anchoredPosition3D.x - __instance.zeroxpos;
+                num8 = num8 > 0f ? -1f : Mathf.Abs(num8);
+
+                if (__instance.noteactive && !__instance.freeplay && !__instance.paused)
+                {
+                    float num9 = (__instance.currentnoteend - num8) / (__instance.currentnoteend - __instance.currentnotestart);
+                    num9 = Mathf.Abs(1f - num9);
+                    float num10 = __instance.easeInOutVal(num9, 0f, __instance.currentnotepshift, 1f);
+                    float num11 = __instance.pointerrect.anchoredPosition.y - (__instance.currentnotestarty + num10);
+                    if (__instance.currentnotepshift != 0f)
+                    {
+                        float t = (Mathf.Clamp(Mathf.Abs(__instance.currentnotepshift), 10f, 150f) - 10f) / 140f;
+                        float num12 = Mathf.Lerp(.96f, .7f, t);
+                        num11 *= num12;
+                    }
+                    float num13 = 100f - Mathf.Abs(num11);
+                    if (num13 < 0f || !__instance.noteplaying)
+                    {
+                        __instance.notescoresamples += 4.78f;
+                        __instance.notescoretotal = 0;
+                        __instance.notescoreaverage = __instance.notescoretotal / __instance.notescoresamples;
+                    }
+                }
+            }
+        }
+
+        public class AutoTune : GameModifierBase
+        {
+            public override Metadata Metadata => AUTO_TUNE;
+
+            public override void SpecialUpdate(GameController __instance)
+            {
+
+            }
+        }
+
+        public class HiddenCursor : GameModifierBase
+        {
+            public override Metadata Metadata => HIDDEN_CURSOR;
+
+            public override void Initialize(GameController __instance)
+            {
+                __instance.pointer.SetActive(false);
+            }
+        }
+
         public readonly struct Metadata
         {
             public string Name { get; }
             public ModifierType ModifierType { get; }
             public string Description { get; }
+            public bool ScoreSubmitEnabled { get; }
 
-            public Metadata(string name, ModifierType modifierType, string description)
+            public Metadata(string name, ModifierType modifierType, string description, bool scoreSubmitEnabled)
             {
                 Name = name;
                 ModifierType = modifierType;
                 Description = description;
+                ScoreSubmitEnabled = scoreSubmitEnabled;
             }
         }
 
@@ -249,7 +318,11 @@ namespace TootTallyGameModifiers
             Hidden,
             Flashlight,
             Brutal,
-            InstaFail
+            InstaFail,
+            EasyMode,
+            StrictMode,
+            AutoTune,
+            HiddenCursor,
         }
     }
 }
