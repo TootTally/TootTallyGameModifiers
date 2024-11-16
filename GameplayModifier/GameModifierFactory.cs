@@ -25,8 +25,8 @@ public static class GameModifierFactory
     {
         var container = popup.popupBox.transform.GetChild(0).gameObject;
         var hContainer = GetHorizontalBox(size, container.transform);
-        if (hContainer.TryGetComponent<VerticalLayoutGroup>(out var verticalLayout))
-            GameObject.DestroyImmediate(verticalLayout);
+        if (hContainer.TryGetComponent<HorizontalLayoutGroup>(out var horizontalLayout))
+            GameObject.DestroyImmediate(horizontalLayout);
         var gridLayout = hContainer.AddComponent<GridLayoutGroup>();
         //gridLayout.padding = new RectOffset(padding, padding, padding, padding);
         //gridLayout.spacing = spacing;
