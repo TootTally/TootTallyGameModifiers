@@ -1,5 +1,21 @@
 #### Changelog:
 
+`v1.2.2` -> `v1.2.3`
+
+```diff
++ Enabled score submit for EZ modifier
+```
+
+`v1.1.7` -> `v1.2.2`
+
+```diff
++ Added 3 new game modifiers
++ Easy Mode (EZ): Lower the threshold for combo and champ break (Unrated)
++ Strict Mode (ST): Note timing becomes significantly more strict (Unrated)
++ Hidden Cursor (HC): Make the cursor invisible
++ Fix for backward compatiblity issue
+```
+
 `v1.1.6` -> `v1.1.7`
 
 ```diff

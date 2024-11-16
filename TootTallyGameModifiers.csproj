@@ -4,21 +4,33 @@
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>TootTallyGameModifiers</AssemblyName>
     <Description>Gameplay modifiers for global leaderboards and for fun</Description>
-    <Version>1.2.2</Version>
+    <Version>1.2.3</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-    <TromboneTootDir>C:\Users\Sabz\AppData\Roaming\r2modmanPlus-local\TromboneChamp\profiles\Default</TromboneTootDir>
+
+    <PackageId>TootTally.GameModifiers</PackageId>
+    <Authors>Electrostats, Emmett, gristCollector</Authors>
+    <Company>TootTally</Company>
+    <PackageTags>Trombone;Champ;TromboneChamp;TootTally</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/TootTally/TootTallyGameModifiers</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <DefaultLanguage>en</DefaultLanguage>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+    <PackageReference Include="TootTally.Core" Version="1.2.2" />
+    <PackageReference Include="TootTally.Settings" Version="1.1.4" />
     <PackageReference Include="UnityEngine.Modules" Version="2019.4.40" IncludeAssets="compile" />
-    <PackageReference Include="TromboneChamp.GameLibs" Version="1.20.0-beta" />
-    <PackageReference Include="TromboneChamp.BaboonAPI" Version="2.5.0" />
-    <PackageReference Include="TromboneChamp.TrombLoader" Version="2.0.0-rc.1" />
-    <Assets Include="Assets\*.*" />
+    <PackageReference Include="TromboneChamp.GameLibs" Version="1.22.0" />
+    <PackageReference Include="TromboneChamp.BaboonAPI" Version="2.7.3" />
+    <PackageReference Include="TromboneChamp.TrombLoader" Version="2.3.0" />
+    <Assets Include="thunderstore\Assets\**" />
     <AssetBundle Include="layoutassetbundle" />
   </ItemGroup>
 
@@ -26,31 +38,25 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="TootTallyCore">
-      <HintPath>$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallyCore\TootTallyCore.dll</HintPath>
-    </Reference>
-    <Reference Include="TootTallySettings">
-      <HintPath>$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallySettings\TootTallySettings.dll</HintPath>
-    </Reference>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <None Include="$(ProjectDir)README.md" Pack="true" PackagePath="\" />
+    <None Include="$(ProjectDir)thunderstore\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallyGameModifiers" />
-    <Copy SourceFiles="@(Assets)" DestinationFolder="$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallyGameModifiers\Assets" />
-    <Copy SourceFiles="@(AssetBundle)" DestinationFolder="$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallyGameModifiers" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(TromboneTootDir) != ''">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(TromboneTootDir)" />
   </Target>
 
   <Target Name="ThunderstoreZip" AfterTargets="Build">
     <Delete Files="$(OutDir)thunderstore" />
-    <Delete Files="$(SolutionDir)$(ProjectName).zip" />
-    <Copy SourceFiles="CHANGELOG.md" DestinationFolder="$(OutDir)thunderstore" />
-    <Copy SourceFiles="icon.png" DestinationFolder="$(OutDir)thunderstore" />
-    <Copy SourceFiles="manifest.json" DestinationFolder="$(OutDir)thunderstore" />
+    <Delete Files="$(ProjectDir)$(ProjectName).zip" />
+    <Copy SourceFiles="thunderstore\icon.png" DestinationFolder="$(OutDir)thunderstore" />
+    <Copy SourceFiles="thunderstore\CHANGELOG.md" DestinationFolder="$(OutDir)thunderstore" />
+    <Copy SourceFiles="thunderstore\manifest.json" DestinationFolder="$(OutDir)thunderstore" />
     <Copy SourceFiles="README.md" DestinationFolder="$(OutDir)thunderstore" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(OutDir)thunderstore/plugins" />
     <Copy SourceFiles="@(Assets)" DestinationFolder="$(OutDir)thunderstore/plugins/Assets" />
     <Copy SourceFiles="@(AssetBundle)" DestinationFolder="$(OutDir)thunderstore/plugins" />
-    <ZipDirectory DestinationFile="$(SolutionDir)$(ProjectName).zip" SourceDirectory="$(OutDir)thunderstore" />
+    <ZipDirectory DestinationFile="$(ProjectDir)$(ProjectName).zip" SourceDirectory="$(OutDir)thunderstore" />
   </Target>
 </Project>
