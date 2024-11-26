@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
+using TootTallyCore.Utils.TootTallyGlobals;
 using UnityEngine;
 
 namespace TootTallyGameModifiers
@@ -75,7 +76,8 @@ namespace TootTallyGameModifiers
         {
             if (!_isInitialized) return;
 
-            Plugin.LogInfo("Active modifiers: " + GetModifiersString());
+            var modifiers = GetModifiersString();
+            Plugin.LogInfo("Active modifiers: " + modifiers);
             foreach (GameModifierBase mod in _gameModifierDict.Values)
                 mod.Initialize(__instance);
 
@@ -90,6 +92,25 @@ namespace TootTallyGameModifiers
 
             if (_flashlight == null)
                 __instance.gameplayppp.vignette.enabled = false;
+        }
+
+        [HarmonyPatch(typeof(TootTallyPatches), nameof(TootTallyPatches.OnGameControllerStartSetTitleWithSpeed))]
+        [HarmonyPostfix]
+        public static void OnSetTitleAddModifiers(GameController __instance)
+        {
+            if (__instance.freeplay) return;
+
+            //Kinda scuffed but string gets set by TTCore if speed is 0
+            var modifiers = GetModifiersString();
+            if (modifiers != "")
+                AddModifiersToTitle(__instance, modifiers);
+        }
+
+        public static void AddModifiersToTitle(GameController __instance, string modifiers)
+        {
+            var modifiersText = $" [{modifiers}]";
+            __instance.songtitle.text += modifiersText;
+            __instance.songtitleshadow.text += modifiersText;
         }
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Update))]
