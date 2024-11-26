@@ -1,6 +1,6 @@
 #### Changelog:
 
-`v1.2.3` -> `v1.2.4`
+`v1.2.3` -> `v1.2.5`
 
 ```diff
 + Added modifier text to song title

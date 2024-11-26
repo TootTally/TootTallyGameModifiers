@@ -94,23 +94,14 @@ namespace TootTallyGameModifiers
                 __instance.gameplayppp.vignette.enabled = false;
         }
 
-        [HarmonyPatch(typeof(TootTallyPatches), nameof(TootTallyPatches.OnGameControllerStartSetTitleWithSpeed))]
+        [HarmonyPatch(typeof(GameController), nameof(GameController.Start))]
         [HarmonyPostfix]
-        public static void OnSetTitleAddModifiers(GameController __instance)
+        public static void OnGameConatrollerStartSetTitleWithModifiers(GameController __instance)
         {
-            if (__instance.freeplay) return;
-
-            //Kinda scuffed but string gets set by TTCore if speed is 0
             var modifiers = GetModifiersString();
-            if (modifiers != "")
-                AddModifiersToTitle(__instance, modifiers);
-        }
-
-        public static void AddModifiersToTitle(GameController __instance, string modifiers)
-        {
+            if (modifiers == "" || __instance.freeplay) return;
             var modifiersText = $" [{modifiers}]";
-            __instance.songtitle.text += modifiersText;
-            __instance.songtitleshadow.text += modifiersText;
+            __instance.songtitle.text = __instance.songtitleshadow.text += modifiersText;
         }
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Update))]
