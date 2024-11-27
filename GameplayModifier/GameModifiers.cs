@@ -154,7 +154,6 @@ namespace TootTallyGameModifiers
                     roundness = 1,
                     smoothness = 1,
                 };
-                //Plugin.LogInfo($"OG: {__instance.defaultnotelength} - ADJ: {__instance.defaultnotelength / (__instance.tempo * TootTallyGlobalVariables.gameSpeedMultiplier) * 100f}");
             }
 
             public override void Update(GameController __instance)
@@ -162,7 +161,8 @@ namespace TootTallyGameModifiers
 
                 if (__instance.totalscore != 0)
                 {
-                    var adjustedNoteLength = __instance.defaultnotelength / (__instance.tempo * TootTallyGlobalVariables.gameSpeedMultiplier) * 100f;
+                    //https://www.desmos.com/calculator/xsdzfdpgv5
+                    var adjustedNoteLength = __instance.defaultnotelength / (100f / (__instance.tempo * TootTallyGlobalVariables.gameSpeedMultiplier));
                     _settings.intensity = (200f / Mathf.Min(adjustedNoteLength, 200f)) + __instance.breathcounter;
                     if (__instance.notebuttonpressed && !__instance.outofbreath)
                     {
