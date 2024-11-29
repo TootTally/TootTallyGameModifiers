@@ -4,6 +4,7 @@
 
 ```diff
 + Added modifier text to song title
++ FL view circle is no longer affected by gameSpeed and BPM.
 ```
 
 `v1.2.2` -> `v1.2.3`
