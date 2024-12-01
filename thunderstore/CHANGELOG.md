@@ -1,10 +1,11 @@
 #### Changelog:
 
-`v1.2.3` -> `v1.2.5`
+`v1.2.3` -> `v1.2.7`
 
 ```diff
 + Added modifier text to song title
 + FL view circle is no longer affected by gameSpeed and BPM.
++ Tweaked FL values for latest change
 ```
 
 `v1.2.2` -> `v1.2.3`

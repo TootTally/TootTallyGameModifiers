@@ -163,7 +163,7 @@ namespace TootTallyGameModifiers
                 {
                     //https://www.desmos.com/calculator/xsdzfdpgv5
                     var adjustedNoteLength = __instance.defaultnotelength / (100f / (__instance.tempo * TootTallyGlobalVariables.gameSpeedMultiplier));
-                    _settings.intensity = (500f / Mathf.Min(adjustedNoteLength, 500f)) + __instance.breathcounter;
+                    _settings.intensity = (325f / Mathf.Min(adjustedNoteLength, 325f)) + __instance.breathcounter;
                     if (__instance.notebuttonpressed && !__instance.outofbreath)
                     {
                         _color.r = _color.g = _color.b = 0f;
