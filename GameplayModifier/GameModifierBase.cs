@@ -9,5 +9,7 @@
         public virtual void Update(GameController __instance) { }
 
         public virtual void SpecialUpdate(GameController __instance) { }
+
+        public virtual void OnQuit(GameController __instance) { }
     }
 }

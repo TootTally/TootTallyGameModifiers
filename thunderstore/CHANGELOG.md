@@ -1,5 +1,12 @@
 #### Changelog:
 
+`v1.2.7` -> `v1.2.8`
+
+```diff
++ Added Mirror Mode (MR): Flips the notes on the vertical axis
++ Added No Breathing (NB): Removes the breathing mechanic
+```
+
 `v1.2.3` -> `v1.2.7`
 
 ```diff

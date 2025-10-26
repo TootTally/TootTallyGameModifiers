@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TootTallyCore.Utils.TootTallyGlobals;
 using UnityEngine;
@@ -17,7 +18,12 @@ namespace TootTallyGameModifiers
         public static Metadata STRICT_MODE = new Metadata("ST", ModifierType.StrictMode, "Strict Mode: Note timing becomes significantly more strict (Unrated)", false);
         public static Metadata AUTO_TUNE = new Metadata("AT", ModifierType.AutoTune, "Auto Tune: Snaps to standard grid and slides (Unrated)", false);
         public static Metadata HIDDEN_CURSOR = new Metadata("HC", ModifierType.HiddenCursor, "Hidden Cursor: Make the cursor invisible", true);
+        public static Metadata NO_BREATHING = new Metadata("NB", ModifierType.NoBreathing, "No Breathing: Disables the breathing mechanic (Unrated)", false);
+        public static Metadata MIRROR_MODE = new Metadata("MR", ModifierType.MirrorMode, "Mirror Mode: Inverts the Y axis.", true);
+        public static Metadata RELAX_MODE = new Metadata("RX", ModifierType.MirrorMode, "Relax Mode: Automatically toot when hovering a note.", false);
+        public static Metadata AUTO_PILOT = new Metadata("AP", ModifierType.MirrorMode, "Auto Pilot: Automatically aim at the notes.", false);
 
+        #region Hidden
         public class Hidden : GameModifierBase
         {
             public override Metadata Metadata => HIDDEN;
@@ -130,7 +136,9 @@ namespace TootTallyGameModifiers
                 }
             }
         }
+        #endregion
 
+        #region Flashlight
         public class Flashlight : GameModifierBase
         {
             public override Metadata Metadata => FLASHLIGHT;
@@ -138,6 +146,7 @@ namespace TootTallyGameModifiers
             private VignetteModel.Settings _settings;
             private Vector2 _pointerPos;
             private Color _color;
+            private bool _isMirror;
 
             public override void Initialize(GameController __instance)
             {
@@ -154,6 +163,7 @@ namespace TootTallyGameModifiers
                     roundness = 1,
                     smoothness = 1,
                 };
+                _isMirror = GameModifierManager.GetModifiersString().Contains("MR");
             }
 
             public override void Update(GameController __instance)
@@ -172,13 +182,19 @@ namespace TootTallyGameModifiers
                 }
 
 
-                _pointerPos.y = (__instance.pointer.transform.localPosition.y + 215) / 430;
+                if (_isMirror)
+                    _pointerPos.y =  (215 - __instance.pointer.transform.localPosition.y) / 430;
+                else
+                    _pointerPos.y = (__instance.pointer.transform.localPosition.y + 215) / 430;
+
                 _settings.center = _pointerPos;
                 _settings.color = _color;
                 __instance.gameplayppp.vignette.settings = _settings;
             }
         }
+        #endregion
 
+        #region Brutal
         public class Brutal : GameModifierBase
         {
             public override Metadata Metadata => BRUTAL;
@@ -218,7 +234,9 @@ namespace TootTallyGameModifiers
                 _lastCombo = __instance.highestcombocounter;
             }
         }
+        #endregion
 
+        #region InstaFail
         public class InstaFail : GameModifierBase
         {
             public override Metadata Metadata => INSTA_FAIL;
@@ -235,7 +253,9 @@ namespace TootTallyGameModifiers
                 }
             }
         }
+        #endregion
 
+        #region EasyMode
         public class EasyMode : GameModifierBase
         {
             public override Metadata Metadata => EASY_MODE;
@@ -246,7 +266,9 @@ namespace TootTallyGameModifiers
             }
 
         }
+        #endregion
 
+        #region StrictMode
         public class StrictMode : GameModifierBase
         {
             public override Metadata Metadata => STRICT_MODE;
@@ -278,7 +300,9 @@ namespace TootTallyGameModifiers
                 }
             }
         }
+        #endregion
 
+        #region AutoTune
         public class AutoTune : GameModifierBase
         {
             public override Metadata Metadata => AUTO_TUNE;
@@ -288,7 +312,9 @@ namespace TootTallyGameModifiers
 
             }
         }
+        #endregion
 
+        #region HiddenCursor
         public class HiddenCursor : GameModifierBase
         {
             public override Metadata Metadata => HIDDEN_CURSOR;
@@ -298,6 +324,80 @@ namespace TootTallyGameModifiers
                 __instance.pointer.SetActive(false);
             }
         }
+        #endregion
+
+        #region NoBreathing
+        public class NoBreathing : GameModifierBase
+        {
+            public override Metadata Metadata => NO_BREATHING;
+
+            public override void Update(GameController __instance)
+            {
+                __instance.breathcounter = 0;
+            }
+        }
+        #endregion
+
+        #region MirrorMode
+        public class MirrorMode : GameModifierBase
+        {
+            public override Metadata Metadata => MIRROR_MODE;
+            public static ControlType oldSetting = ControlType.NotSet;
+
+            public override void Initialize(GameController __instance)
+            {
+                if (oldSetting == ControlType.NotSet)
+                    oldSetting = (ControlType)GlobalVariables.localsettings.mousecontrolmode;
+
+                __instance.noteholder.transform.parent.localScale = new Vector3(1, -1, 1);
+                __instance.lyricsholder.transform.localScale = new Vector3(1, -1, 1);
+                for (int i = 0; i < 15; i++)
+                    __instance.noteparticles.transform.GetChild(i).localScale = new Vector3(1, -1, 1);
+                if ((int)oldSetting == GlobalVariables.localsettings.mousecontrolmode)
+                    GlobalVariables.localsettings.mousecontrolmode = GlobalVariables.localsettings.mousecontrolmode switch
+                    {
+                        (int)ControlType.RegularX => (int)ControlType.InvertedX,
+                        (int)ControlType.InvertedX => (int)ControlType.RegularX,
+                        (int)ControlType.RegularY => (int)ControlType.InvertedY,
+                        (int)ControlType.InvertedY => (int)ControlType.RegularY,
+                        _ => throw new System.NotImplementedException()
+                    };
+            }
+
+            public override void OnQuit(GameController __instance) => ResetLocalSetting();
+
+            public static void ResetLocalSetting()
+            {
+                if ((int)oldSetting != GlobalVariables.localsettings.mousecontrolmode)
+                    GlobalVariables.localsettings.mousecontrolmode = (int)oldSetting;
+                oldSetting = ControlType.NotSet;
+            }
+        }
+        #endregion
+
+        #region RelaxMode
+        public class RelaxMode : GameModifierBase
+        {
+            public override Metadata Metadata => RELAX_MODE;
+
+            public override void Initialize(GameController __instance)
+            {
+
+            }
+        }
+        #endregion
+
+        #region AutoPilot
+        public class AutoPilot : GameModifierBase
+        {
+            public override Metadata Metadata => AUTO_PILOT;
+
+            public override void Initialize(GameController __instance)
+            {
+
+            }
+        }
+        #endregion
 
         public readonly struct Metadata
         {
@@ -325,6 +425,17 @@ namespace TootTallyGameModifiers
             StrictMode,
             AutoTune,
             HiddenCursor,
+            NoBreathing,
+            MirrorMode,
+        }
+
+        public enum ControlType
+        {
+            RegularX,
+            InvertedX,
+            RegularY,
+            InvertedY,
+            NotSet
         }
     }
 }

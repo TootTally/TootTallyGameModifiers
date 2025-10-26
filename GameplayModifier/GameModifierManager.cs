@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TootTallyCore.Utils.TootTallyGlobals;
 using UnityEngine;
+using UnityEngine.Localization.Pseudo;
 
 namespace TootTallyGameModifiers
 {
@@ -31,6 +32,14 @@ namespace TootTallyGameModifiers
 
         [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
         [HarmonyPostfix]
+        static void BackupFixForMirrorNotResetting()
+        {
+            if (GameModifiers.MirrorMode.oldSetting == GameModifiers.ControlType.NotSet) return;
+            GameModifiers.MirrorMode.ResetLocalSetting();
+        }
+
+        [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
+        [HarmonyPostfix]
         static void OnLevelSelectControllerStartPostfix(LevelSelectController __instance)
         {
             if (!_isInitialized) Initialize();
@@ -46,7 +55,10 @@ namespace TootTallyGameModifiers
             AddButton(hContainer.transform, GameModifiers.STRICT_MODE);
             //AddButton(hContainer.transform, GameModifiers.AUTO_TUNE);
             AddButton(hContainer.transform, GameModifiers.HIDDEN_CURSOR);
+            AddButton(hContainer.transform, GameModifiers.NO_BREATHING);
+            AddButton(hContainer.transform, GameModifiers.MIRROR_MODE);
             __instance.sortdrop.transform.SetAsLastSibling();
+
         }
 
         static void Initialize()
@@ -63,12 +75,14 @@ namespace TootTallyGameModifiers
                 {GameModifiers.STRICT_MODE.Name, GameModifiers.STRICT_MODE },
                 {GameModifiers.AUTO_TUNE.Name, GameModifiers.AUTO_TUNE },
                 {GameModifiers.HIDDEN_CURSOR.Name, GameModifiers.HIDDEN_CURSOR },
+                {GameModifiers.NO_BREATHING.Name, GameModifiers.NO_BREATHING },
+                {GameModifiers.MIRROR_MODE.Name, GameModifiers.MIRROR_MODE },
             };
             _modifiersBackup = "";
             _isInitialized = true;
         }
 
-        private static GameModifierBase _hidden, _flashlight, _brutalMode, _instaFail, _easyMode, _strictMode, _autoTune, _noCursor;
+        private static GameModifierBase _hidden, _flashlight, _brutalMode, _instaFail, _easyMode, _strictMode, _autoTune, _noCursor, _noBreathing, _mirrorMode;
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Start))]
         [HarmonyPostfix]
@@ -89,6 +103,8 @@ namespace TootTallyGameModifiers
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.StrictMode, out _strictMode);
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.AutoTune, out _autoTune);
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.HiddenCursor, out _noCursor);
+            _gameModifierDict.TryGetValue(GameModifiers.ModifierType.NoBreathing, out _noBreathing);
+            _gameModifierDict.TryGetValue(GameModifiers.ModifierType.MirrorMode, out _mirrorMode);
 
             if (_flashlight == null)
                 __instance.gameplayppp.vignette.enabled = false;
@@ -114,6 +130,7 @@ namespace TootTallyGameModifiers
             _flashlight?.Update(__instance);
             _brutalMode?.Update(__instance);
             _strictMode?.Update(__instance);
+            _noBreathing?.Update(__instance);
         }
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.doScoreText))]
@@ -136,6 +153,22 @@ namespace TootTallyGameModifiers
 
             _easyMode?.SpecialUpdate(__instance);
             _strictMode?.SpecialUpdate(__instance);
+        }
+
+        [HarmonyPatch(typeof(GameController), nameof(GameController.pauseQuitLevel))]
+        [HarmonyPrefix]
+        static void OnQuitRevertControlSetting(GameController __instance)
+        {
+            if (!_isInitialized) return;
+            _mirrorMode?.OnQuit(__instance);
+        }
+
+        [HarmonyPatch(typeof(CurtainController), nameof(CurtainController.transitionOut))]
+        [HarmonyPrefix]
+        static void OnQuitBackupRevertControlSetting()
+        {
+            if (!_isInitialized) return;
+            _mirrorMode?.OnQuit(null);
         }
 
         public static void Toggle(GameModifiers.ModifierType modifierType)
@@ -179,6 +212,8 @@ namespace TootTallyGameModifiers
             GameModifiers.ModifierType.StrictMode => new GameModifiers.StrictMode(),
             GameModifiers.ModifierType.AutoTune => new GameModifiers.AutoTune(),
             GameModifiers.ModifierType.HiddenCursor => new GameModifiers.HiddenCursor(),
+            GameModifiers.ModifierType.NoBreathing => new GameModifiers.NoBreathing(),
+            GameModifiers.ModifierType.MirrorMode => new GameModifiers.MirrorMode(),
             _ => throw new System.NotImplementedException(),
         };
 
