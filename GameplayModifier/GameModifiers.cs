@@ -360,7 +360,7 @@ namespace TootTallyGameModifiers
                         (int)ControlType.InvertedX => (int)ControlType.RegularX,
                         (int)ControlType.RegularY => (int)ControlType.InvertedY,
                         (int)ControlType.InvertedY => (int)ControlType.RegularY,
-                        _ => throw new System.NotImplementedException()
+                        _ => (int)ControlType.InvertedY
                     };
             }
 
@@ -368,7 +368,7 @@ namespace TootTallyGameModifiers
 
             public static void ResetLocalSetting()
             {
-                if ((int)oldSetting != GlobalVariables.localsettings.mousecontrolmode)
+                if ((int)oldSetting != GlobalVariables.localsettings.mousecontrolmode && oldSetting != ControlType.NotSet)
                     GlobalVariables.localsettings.mousecontrolmode = (int)oldSetting;
                 oldSetting = ControlType.NotSet;
             }

@@ -1,6 +1,6 @@
 #### Changelog:
 
-`v1.2.7` -> `v1.2.8`
+`v1.2.7` -> `v1.2.10`
 
 ```diff
 + Added Mirror Mode (MR): Flips the notes on the vertical axis

@@ -1,6 +1,6 @@
 {
     "name": "TootTallyGameModifiers",
-    "version_number": "1.2.8",
+    "version_number": "1.2.10",
     "website_url": "https://github.com/TootTally/TootTallyCore",
     "description": "TootTally's extra game modifiers such as Hidden, Flashlight and Brutal.",
     "dependencies": [

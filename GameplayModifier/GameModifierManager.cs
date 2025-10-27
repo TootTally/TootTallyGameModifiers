@@ -171,6 +171,14 @@ namespace TootTallyGameModifiers
             _mirrorMode?.OnQuit(null);
         }
 
+        [HarmonyPatch(typeof(PlaytestAnims), nameof(PlaytestAnims.Start))]
+        [HarmonyPrefix]
+        static void OnQuitBackupRevertControlSettingMultiplayer()
+        {
+            if (!_isInitialized) return;
+            _mirrorMode?.OnQuit(null);
+        }
+
         public static void Toggle(GameModifiers.ModifierType modifierType)
         {
             var button = _modifierButtonDict[modifierType];
