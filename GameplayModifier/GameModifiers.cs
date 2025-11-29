@@ -10,18 +10,19 @@ namespace TootTallyGameModifiers
 {
     public static class GameModifiers
     {
-        public static Metadata HIDDEN = new Metadata("HD", ModifierType.Hidden, "Hidden: Notes will disappear as they\n approach the left", true);
-        public static Metadata FLASHLIGHT = new Metadata("FL", ModifierType.Flashlight, "Flashlight: Only a small circle around the\n cursor is visible", true);
-        public static Metadata BRUTAL = new Metadata("BT", ModifierType.Brutal, "Brutal: Game will speed up if you do good and\n slow down when you are bad (Unrated)", false);
-        public static Metadata INSTA_FAIL = new Metadata("IF", ModifierType.InstaFail, "Insta Fail: Restart the song as soon as you miss", true);
-        public static Metadata EASY_MODE = new Metadata("EZ", ModifierType.EasyMode, "Easy Mode: Lower the threshold for combo and champ break", true);
-        public static Metadata STRICT_MODE = new Metadata("ST", ModifierType.StrictMode, "Strict Mode: Note timing becomes significantly more strict (Unrated)", false);
-        public static Metadata AUTO_TUNE = new Metadata("AT", ModifierType.AutoTune, "Auto Tune: Snaps to standard grid and slides (Unrated)", false);
-        public static Metadata HIDDEN_CURSOR = new Metadata("HC", ModifierType.HiddenCursor, "Hidden Cursor: Make the cursor invisible", true);
-        public static Metadata NO_BREATHING = new Metadata("NB", ModifierType.NoBreathing, "No Breathing: Disables the breathing mechanic (Unrated)", false);
-        public static Metadata MIRROR_MODE = new Metadata("MR", ModifierType.MirrorMode, "Mirror Mode: Inverts the Y axis.", true);
-        public static Metadata RELAX_MODE = new Metadata("RX", ModifierType.MirrorMode, "Relax Mode: Automatically toot when hovering a note.", false);
-        public static Metadata AUTO_PILOT = new Metadata("AP", ModifierType.MirrorMode, "Auto Pilot: Automatically aim at the notes.", false);
+        //bools are: submit score allowed and allowed in multiplayer
+        public static Metadata HIDDEN = new Metadata("HD", ModifierType.Hidden, "Hidden: Notes will disappear as they\n approach the left", true, true);
+        public static Metadata FLASHLIGHT = new Metadata("FL", ModifierType.Flashlight, "Flashlight: Only a small circle around the\n cursor is visible", true, true);
+        public static Metadata BRUTAL = new Metadata("BT", ModifierType.Brutal, "Brutal: Game will speed up if you do good and\n slow down when you are bad (Unrated)", false, false);
+        public static Metadata INSTA_FAIL = new Metadata("IF", ModifierType.InstaFail, "Insta Fail: Restart the song as soon as you miss", true, false);
+        public static Metadata EASY_MODE = new Metadata("EZ", ModifierType.EasyMode, "Easy Mode: Lower the threshold for combo and champ break", true, true);
+        public static Metadata STRICT_MODE = new Metadata("ST", ModifierType.StrictMode, "Strict Mode: Note timing becomes significantly more strict (Unrated)", false, true);
+        public static Metadata AUTO_TUNE = new Metadata("AT", ModifierType.AutoTune, "Auto Tune: Snaps to standard grid and slides (Unrated)", false, true);
+        public static Metadata HIDDEN_CURSOR = new Metadata("HC", ModifierType.HiddenCursor, "Hidden Cursor: Make the cursor invisible", true, true);
+        public static Metadata NO_BREATHING = new Metadata("NB", ModifierType.NoBreathing, "No Breathing: Disables the breathing mechanic (Unrated)", false, true);
+        public static Metadata MIRROR_MODE = new Metadata("MR", ModifierType.MirrorMode, "Mirror Mode: Inverts the Y axis.", true, true);
+        public static Metadata RELAX_MODE = new Metadata("RX", ModifierType.MirrorMode, "Relax Mode: Automatically toot when hovering a note.", false, true);
+        public static Metadata AUTO_PILOT = new Metadata("AP", ModifierType.MirrorMode, "Auto Pilot: Automatically aim at the notes.", false, true);
 
         #region Hidden
         public class Hidden : GameModifierBase
@@ -183,7 +184,7 @@ namespace TootTallyGameModifiers
 
 
                 if (_isMirror)
-                    _pointerPos.y =  (215 - __instance.pointer.transform.localPosition.y) / 430;
+                    _pointerPos.y = (215 - __instance.pointer.transform.localPosition.y) / 430;
                 else
                     _pointerPos.y = (__instance.pointer.transform.localPosition.y + 215) / 430;
 
@@ -342,36 +343,23 @@ namespace TootTallyGameModifiers
         public class MirrorMode : GameModifierBase
         {
             public override Metadata Metadata => MIRROR_MODE;
-            public static ControlType oldSetting = ControlType.NotSet;
 
             public override void Initialize(GameController __instance)
             {
-                if (oldSetting == ControlType.NotSet)
-                    oldSetting = (ControlType)GlobalVariables.localsettings.mousecontrolmode;
-
                 __instance.noteholder.transform.parent.localScale = new Vector3(1, -1, 1);
                 __instance.lyricsholder.transform.localScale = new Vector3(1, -1, 1);
                 for (int i = 0; i < 15; i++)
                     __instance.noteparticles.transform.GetChild(i).localScale = new Vector3(1, -1, 1);
-                if ((int)oldSetting == GlobalVariables.localsettings.mousecontrolmode)
-                    GlobalVariables.localsettings.mousecontrolmode = GlobalVariables.localsettings.mousecontrolmode switch
-                    {
-                        (int)ControlType.RegularX => (int)ControlType.InvertedX,
-                        (int)ControlType.InvertedX => (int)ControlType.RegularX,
-                        (int)ControlType.RegularY => (int)ControlType.InvertedY,
-                        (int)ControlType.InvertedY => (int)ControlType.RegularY,
-                        _ => (int)ControlType.InvertedY
-                    };
+                __instance.gameplay_settings.mouse_controldirection = GlobalVariables.localsettings.mousecontrolmode switch
+                {
+                    (int)ControlType.RegularX => (int)ControlType.InvertedX,
+                    (int)ControlType.InvertedX => (int)ControlType.RegularX,
+                    (int)ControlType.RegularY => (int)ControlType.InvertedY,
+                    (int)ControlType.InvertedY => (int)ControlType.RegularY,
+                    _ => (int)ControlType.InvertedY
+                };
             }
 
-            public override void OnQuit(GameController __instance) => ResetLocalSetting();
-
-            public static void ResetLocalSetting()
-            {
-                if ((int)oldSetting != GlobalVariables.localsettings.mousecontrolmode && oldSetting != ControlType.NotSet)
-                    GlobalVariables.localsettings.mousecontrolmode = (int)oldSetting;
-                oldSetting = ControlType.NotSet;
-            }
         }
         #endregion
 
@@ -405,13 +393,15 @@ namespace TootTallyGameModifiers
             public ModifierType ModifierType { get; }
             public string Description { get; }
             public bool ScoreSubmitEnabled { get; }
+            public bool AllowedInMultiplayer { get; }
 
-            public Metadata(string name, ModifierType modifierType, string description, bool scoreSubmitEnabled)
+            public Metadata(string name, ModifierType modifierType, string description, bool scoreSubmitEnabled, bool allowedInMultiplayer)
             {
                 Name = name;
                 ModifierType = modifierType;
                 Description = description;
                 ScoreSubmitEnabled = scoreSubmitEnabled;
+                AllowedInMultiplayer = allowedInMultiplayer;
             }
         }
 

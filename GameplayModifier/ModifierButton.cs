@@ -27,7 +27,7 @@ public class ModifierButton
         button = GameObjectFactory.CreateCustomButton(transform, Vector2.zero, size, sprite, name, onClick);
         var gameObject = button.gameObject;
         var bubble = GameObjectFactory.CreateBubble(Vector2.zero, name + "Bubble", modifier.Description, new Vector2(1f, 0f), bubbleBorder, true, fontSize);
-        gameObject.AddComponent<BubblePopupHandler>().Initialize(bubble, useWorldPosition);
+        gameObject.AddComponent<BubblePopupHandler>().Initialize(transform, bubble, useWorldPosition);
 
         glow = new GameObject("glow", typeof(Image));
         Image component = glow.GetComponent<Image>();

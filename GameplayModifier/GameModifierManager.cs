@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TootTallyCore.Utils.TootTallyGlobals;
+using TootTallyCore.Utils.TootTallyNotifs;
 using UnityEngine;
 using UnityEngine.Localization.Pseudo;
 
@@ -28,14 +29,6 @@ namespace TootTallyGameModifiers
             var active = _gameModifierDict.ContainsKey(mod.ModifierType);
             var button = new ModifierButton(transform, mod, active, new Vector2(32, 32), 3, 8, true, delegate { Toggle(mod.ModifierType); });
             _modifierButtonDict.Add(mod.ModifierType, button);
-        }
-
-        [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
-        [HarmonyPostfix]
-        static void BackupFixForMirrorNotResetting()
-        {
-            if (GameModifiers.MirrorMode.oldSetting == GameModifiers.ControlType.NotSet) return;
-            GameModifiers.MirrorMode.ResetLocalSetting();
         }
 
         [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
@@ -155,34 +148,15 @@ namespace TootTallyGameModifiers
             _strictMode?.SpecialUpdate(__instance);
         }
 
-        [HarmonyPatch(typeof(GameController), nameof(GameController.pauseQuitLevel))]
-        [HarmonyPrefix]
-        static void OnQuitRevertControlSetting(GameController __instance)
-        {
-            if (!_isInitialized) return;
-            _mirrorMode?.OnQuit(__instance);
-        }
-
-        [HarmonyPatch(typeof(CurtainController), nameof(CurtainController.transitionOut))]
-        [HarmonyPrefix]
-        static void OnQuitBackupRevertControlSetting()
-        {
-            if (!_isInitialized) return;
-            _mirrorMode?.OnQuit(null);
-        }
-
-        [HarmonyPatch(typeof(PlaytestAnims), nameof(PlaytestAnims.Start))]
-        [HarmonyPrefix]
-        static void OnQuitBackupRevertControlSettingMultiplayer()
-        {
-            if (!_isInitialized) return;
-            _mirrorMode?.OnQuit(null);
-        }
-
         public static void Toggle(GameModifiers.ModifierType modifierType)
         {
             var button = _modifierButtonDict[modifierType];
             if (button.onCooldown) return;
+            if (!button.modifier.AllowedInMultiplayer && TootTallyGlobalVariables.isPlayingMultiplayer)
+            {
+                TootTallyNotifManager.DisplayNotif($"{modifierType} is not allowed in multiplayer.");
+                return;
+            }
             button.onCooldown = true;
             if (!_gameModifierDict.ContainsKey(modifierType))
             {
@@ -234,16 +208,19 @@ namespace TootTallyGameModifiers
         {
             _modifiersBackup = GetModifiersString();
             ClearAllModifiers();
+            Plugin.LogInfo($"Received {replayModifierString} to load.");
             var modifierTypes = GetModifierSet(replayModifierString);
+            Plugin.LogInfo($"Parsed {modifierTypes.Join(x => x.Name, ",")}");
             foreach (var modType in modifierTypes) Add(modType.ModifierType);
         }
 
-        public static HashSet<GameModifiers.Metadata> GetModifierSet(string replayModifierString)
+        public static List<GameModifiers.Metadata> GetModifierSet(string replayModifierString)
         {
-            if (replayModifierString == null) return new HashSet<GameModifiers.Metadata>();
-            return new HashSet<GameModifiers.Metadata>(replayModifierString.Split(',')
+            if (replayModifierString == null || replayModifierString == "") return new List<GameModifiers.Metadata>();
+            return replayModifierString.Split(',')
                 .Where(_stringModifierDict.ContainsKey)
-                .Select(modName => _stringModifierDict[modName]));
+                .Select(modName => _stringModifierDict[modName])
+                .ToList();
         }
 
         public static void LoadBackedupModifiers() => LoadModifiersFromString(_modifiersBackup);
