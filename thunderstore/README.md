@@ -1,5 +1,5 @@
 # TootTally Game Modifiers
-> Version: 1.2.10
+> Version: 1.2.11
 
 [TootTallyCore](https://toottally.com/)'s extra game modifiers such as Hidden, Flashlight and Brutal. Required with leaderboard module.
 

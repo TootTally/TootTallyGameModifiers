@@ -1,5 +1,11 @@
 #### Changelog:
 
+`v1.2.10` -> `v1.2.11`
+
+```diff
++ Fixed MR for TC 1.19
+```
+
 `v1.2.7` -> `v1.2.10`
 
 ```diff
