@@ -1,5 +1,14 @@
 #### Changelog:
 
+`v1.2.11` -> `v1.2.12`
+
+```diff
++ Added new modifiers
++ Relax Mode: Automatically toots for you (No submit, allowed in multi)
++ Auto Pilot: Automatically aim for you (No submit, allowed in multi)
++ Keyboard mode: Pressing keys on your keyboard will set the pitch, use mouse to pitch bend (No submit, Not allowed in multi)
+```
+
 `v1.2.10` -> `v1.2.11`
 
 ```diff
