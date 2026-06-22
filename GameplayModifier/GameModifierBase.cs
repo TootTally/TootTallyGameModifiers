@@ -9,5 +9,6 @@
         public virtual void Update(GameController __instance) { }
 
         public virtual void SpecialUpdate(GameController __instance) { }
+        public virtual void SpecialUpdate(ref bool __value) { }
     }
 }

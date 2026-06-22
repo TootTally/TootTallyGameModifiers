@@ -25,6 +25,7 @@ public class CustomPopup
 
         var popupContainer = popupBox.transform.GetChild(0).gameObject;
         popupContainer.GetComponent<Image>().color = Theme.colors.leaderboard.text.CompareRGB(Color.black) ? new Color(1, 1, 1, 1) : new Color(0, 0, 0, 1);
+        popupContainer.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperCenter;
 
         var boxRect = popupBox.GetComponent<RectTransform>();
         boxRect.anchorMin = boxRect.anchorMax = boxRect.pivot = Vector2.one / 2f;

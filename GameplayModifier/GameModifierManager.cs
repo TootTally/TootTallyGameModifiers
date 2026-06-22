@@ -38,7 +38,7 @@ namespace TootTallyGameModifiers
             if (!_isInitialized) Initialize();
 
             _modifierButtonDict.Clear();
-            var popup = GameModifierFactory.CreateModifiersPopup(__instance.fullpanel.transform, new Vector2(-420, -150), new Vector2(32, 32), __instance.fullpanel.transform, new Vector2(175, 125), 20, new Vector2(20, 20));
+            var popup = GameModifierFactory.CreateModifiersPopup(__instance.fullpanel.transform, new Vector2(-420, -150), new Vector2(32, 32), __instance.fullpanel.transform, new Vector2(175, 150), 20, new Vector2(20, 20));
             var hContainer = GameModifierFactory.CreatePopupContainer(popup, new Vector2(0, 65));
             AddButton(hContainer.transform, GameModifiers.HIDDEN);
             AddButton(hContainer.transform, GameModifiers.FLASHLIGHT);
@@ -46,10 +46,13 @@ namespace TootTallyGameModifiers
             AddButton(hContainer.transform, GameModifiers.INSTA_FAIL);
             AddButton(hContainer.transform, GameModifiers.EASY_MODE);
             AddButton(hContainer.transform, GameModifiers.STRICT_MODE);
-            //AddButton(hContainer.transform, GameModifiers.AUTO_TUNE);
             AddButton(hContainer.transform, GameModifiers.HIDDEN_CURSOR);
             AddButton(hContainer.transform, GameModifiers.NO_BREATHING);
             AddButton(hContainer.transform, GameModifiers.MIRROR_MODE);
+            //AddButton(hContainer.transform, GameModifiers.SCORE_V2);
+            AddButton(hContainer.transform, GameModifiers.KEYBOARD_MODE);
+            AddButton(hContainer.transform, GameModifiers.AUTO_PILOT);
+            AddButton(hContainer.transform, GameModifiers.RELAX_MODE);
             __instance.sortdrop.transform.SetAsLastSibling();
 
         }
@@ -66,16 +69,19 @@ namespace TootTallyGameModifiers
                 {GameModifiers.INSTA_FAIL.Name, GameModifiers.INSTA_FAIL },
                 {GameModifiers.EASY_MODE.Name, GameModifiers.EASY_MODE },
                 {GameModifiers.STRICT_MODE.Name, GameModifiers.STRICT_MODE },
-                {GameModifiers.AUTO_TUNE.Name, GameModifiers.AUTO_TUNE },
                 {GameModifiers.HIDDEN_CURSOR.Name, GameModifiers.HIDDEN_CURSOR },
                 {GameModifiers.NO_BREATHING.Name, GameModifiers.NO_BREATHING },
                 {GameModifiers.MIRROR_MODE.Name, GameModifiers.MIRROR_MODE },
+                {GameModifiers.SCORE_V2.Name, GameModifiers.SCORE_V2 },
+                {GameModifiers.KEYBOARD_MODE.Name, GameModifiers.KEYBOARD_MODE },
+                {GameModifiers.AUTO_PILOT.Name, GameModifiers.AUTO_PILOT },
+                {GameModifiers.RELAX_MODE.Name, GameModifiers.RELAX_MODE },
             };
             _modifiersBackup = "";
             _isInitialized = true;
         }
 
-        private static GameModifierBase _hidden, _flashlight, _brutalMode, _instaFail, _easyMode, _strictMode, _autoTune, _noCursor, _noBreathing, _mirrorMode;
+        private static GameModifierBase _hidden, _flashlight, _brutalMode, _instaFail, _easyMode, _strictMode, _noCursor, _noBreathing, _mirrorMode, _scoreV2, _keyboardMode, _autoPilot, _relaxMode;
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.Start))]
         [HarmonyPostfix]
@@ -94,10 +100,13 @@ namespace TootTallyGameModifiers
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.InstaFail, out _instaFail);
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.EasyMode, out _easyMode);
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.StrictMode, out _strictMode);
-            _gameModifierDict.TryGetValue(GameModifiers.ModifierType.AutoTune, out _autoTune);
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.HiddenCursor, out _noCursor);
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.NoBreathing, out _noBreathing);
             _gameModifierDict.TryGetValue(GameModifiers.ModifierType.MirrorMode, out _mirrorMode);
+            _gameModifierDict.TryGetValue(GameModifiers.ModifierType.ScoreV2, out _scoreV2);
+            _gameModifierDict.TryGetValue(GameModifiers.ModifierType.KeyboardMode, out _keyboardMode);
+            _gameModifierDict.TryGetValue(GameModifiers.ModifierType.AutoPilot, out _autoPilot);
+            _gameModifierDict.TryGetValue(GameModifiers.ModifierType.RelaxMode, out _relaxMode);
 
             if (_flashlight == null)
                 __instance.gameplayppp.vignette.enabled = false;
@@ -124,6 +133,19 @@ namespace TootTallyGameModifiers
             _brutalMode?.Update(__instance);
             _strictMode?.Update(__instance);
             _noBreathing?.Update(__instance);
+            _keyboardMode?.Update(__instance);
+            _autoPilot?.Update(__instance);
+            _relaxMode?.Update(__instance);
+        }
+
+        [HarmonyPatch(typeof(GameController), nameof(GameController.isNoteButtonPressed))]
+        [HarmonyPostfix]
+        static void UpdateRelaxMode(GameController __instance, ref bool __result)
+        {
+            if (!_isInitialized && !__instance.freeplay && !__instance.paused && !__instance.quitting) return;
+
+            _relaxMode?.SpecialUpdate(ref __result);
+
         }
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.doScoreText))]
@@ -145,6 +167,7 @@ namespace TootTallyGameModifiers
             if (!_isInitialized) return;
 
             _easyMode?.SpecialUpdate(__instance);
+            _scoreV2?.SpecialUpdate(__instance);
             _strictMode?.SpecialUpdate(__instance);
         }
 
@@ -192,10 +215,13 @@ namespace TootTallyGameModifiers
             GameModifiers.ModifierType.InstaFail => new GameModifiers.InstaFail(),
             GameModifiers.ModifierType.EasyMode => new GameModifiers.EasyMode(),
             GameModifiers.ModifierType.StrictMode => new GameModifiers.StrictMode(),
-            GameModifiers.ModifierType.AutoTune => new GameModifiers.AutoTune(),
             GameModifiers.ModifierType.HiddenCursor => new GameModifiers.HiddenCursor(),
             GameModifiers.ModifierType.NoBreathing => new GameModifiers.NoBreathing(),
             GameModifiers.ModifierType.MirrorMode => new GameModifiers.MirrorMode(),
+            GameModifiers.ModifierType.ScoreV2 => new GameModifiers.ScoreV2(),
+            GameModifiers.ModifierType.KeyboardMode => new GameModifiers.KeyboardMode(),
+            GameModifiers.ModifierType.AutoPilot => new GameModifiers.AutoPilot(),
+            GameModifiers.ModifierType.RelaxMode => new GameModifiers.RelaxMode(),
             _ => throw new System.NotImplementedException(),
         };
 

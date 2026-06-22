@@ -1,10 +1,14 @@
-﻿using System;
+﻿using Rewired;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TootTallyCore.Utils.TootTallyGlobals;
+using TrombLoader.Data;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 using UnityEngine.UI;
+using UnityEngineInternal.Input;
+using static Rewired.Platforms.Custom.CustomInputSource;
 
 namespace TootTallyGameModifiers
 {
@@ -17,12 +21,13 @@ namespace TootTallyGameModifiers
         public static Metadata INSTA_FAIL = new Metadata("IF", ModifierType.InstaFail, "Insta Fail: Restart the song as soon as you miss", true, false);
         public static Metadata EASY_MODE = new Metadata("EZ", ModifierType.EasyMode, "Easy Mode: Lower the threshold for combo and champ break", true, true);
         public static Metadata STRICT_MODE = new Metadata("ST", ModifierType.StrictMode, "Strict Mode: Note timing becomes significantly more strict (Unrated)", false, true);
-        public static Metadata AUTO_TUNE = new Metadata("AT", ModifierType.AutoTune, "Auto Tune: Snaps to standard grid and slides (Unrated)", false, true);
         public static Metadata HIDDEN_CURSOR = new Metadata("HC", ModifierType.HiddenCursor, "Hidden Cursor: Make the cursor invisible", true, true);
         public static Metadata NO_BREATHING = new Metadata("NB", ModifierType.NoBreathing, "No Breathing: Disables the breathing mechanic (Unrated)", false, true);
         public static Metadata MIRROR_MODE = new Metadata("MR", ModifierType.MirrorMode, "Mirror Mode: Inverts the Y axis.", true, true);
-        public static Metadata RELAX_MODE = new Metadata("RX", ModifierType.MirrorMode, "Relax Mode: Automatically toot when hovering a note.", false, true);
-        public static Metadata AUTO_PILOT = new Metadata("AP", ModifierType.MirrorMode, "Auto Pilot: Automatically aim at the notes.", false, true);
+        public static Metadata SCORE_V2 = new Metadata("V2", ModifierType.ScoreV2, "Score V2: Normalizes the score to 1 million points.", false, true);
+        public static Metadata AUTO_PILOT = new Metadata("AP", ModifierType.AutoPilot, "Auto Pilot: Automatically aim at the notes.", false, true);
+        public static Metadata RELAX_MODE = new Metadata("RX", ModifierType.RelaxMode, "Relax Mode: Automatically toot when hovering a note.", false, true);
+        public static Metadata KEYBOARD_MODE = new Metadata("KM", ModifierType.KeyboardMode, "Keyboard Mode: Play notes with your keyboard, adjust pitch with mouse", false, false);
 
         #region Hidden
         public class Hidden : GameModifierBase
@@ -303,18 +308,6 @@ namespace TootTallyGameModifiers
         }
         #endregion
 
-        #region AutoTune
-        public class AutoTune : GameModifierBase
-        {
-            public override Metadata Metadata => AUTO_TUNE;
-
-            public override void SpecialUpdate(GameController __instance)
-            {
-
-            }
-        }
-        #endregion
-
         #region HiddenCursor
         public class HiddenCursor : GameModifierBase
         {
@@ -363,15 +356,113 @@ namespace TootTallyGameModifiers
         }
         #endregion
 
+        #region ScoreV2
+        public class ScoreV2 : GameModifierBase
+        {
+            public override Metadata Metadata => SCORE_V2;
+
+
+
+            public override void SpecialUpdate(GameController __instance)
+            {
+
+            }
+        }
+        #endregion
+
         #region RelaxMode
         public class RelaxMode : GameModifierBase
         {
             public override Metadata Metadata => RELAX_MODE;
 
+            private GameController _gameController;
+            private int _noteIndex;
+            private float _latencyOffset, _trackTime, _lastTrackTime, _lastTimeSample,
+                _currentNoteStartTime, _currentNoteEndTime,
+                _lastNoteEndTime;
+            private bool _isTooting, _releasedBetweenNotes, _shouldBreath, _isNoteActive, _isSlider;
+
             public override void Initialize(GameController __instance)
             {
-
+                _gameController = __instance;
+                _latencyOffset = _gameController.latency_offset;
+                _isTooting = false;
+                _isSlider = false;
+                _shouldBreath = false;
+                _isNoteActive = false;
+                _releasedBetweenNotes = true;
+                _noteIndex = -1;
+                _lastNoteEndTime = -999;
+                _lastTrackTime = _trackTime = 0f;
+                _lastTimeSample = 0f;
+                if (_gameController.leveldata.Count > 0)
+                {
+                    _currentNoteStartTime = B2s(_gameController.leveldata[0][0], _gameController.tempo);
+                    _currentNoteEndTime = _currentNoteStartTime + B2s(_gameController.leveldata[0][1], _gameController.tempo);
+                }
             }
+
+            public override void Update(GameController __instance)
+            {
+                if (!_gameController.paused && !_gameController.quitting && _gameController.musictrack.isPlaying)
+                    UpdateTrackData();
+
+                if (!_shouldBreath && ((_gameController.breathcounter >= .95f && _isNoteActive) || (!_isNoteActive && _gameController.breathcounter >= .5f)))
+                    _shouldBreath = true;
+                else if (_shouldBreath && ((_gameController.breathcounter <= .65f && _isNoteActive) || (!_isNoteActive && _gameController.breathcounter <= 0f)))
+                    _shouldBreath = false;
+
+                _isTooting = ShouldToot();
+                if (!_isTooting)
+                    _releasedBetweenNotes = true;
+            }
+
+            public override void SpecialUpdate(ref bool __value)
+            {
+                __value = _isTooting;
+            }
+
+            private bool ShouldToot() => ((_trackTime >= Mathf.Max(_currentNoteStartTime - _latencyOffset, _lastNoteEndTime) && _releasedBetweenNotes)
+                                     || _trackTime <= _lastNoteEndTime
+                                     || _isSlider)
+                                     && !_shouldBreath
+                                     && _trackTime > .01f;
+            private void UpdateTrackData()
+            {
+                var dt = Time.deltaTime;
+                _trackTime += dt * TootTallyGlobalVariables.gameSpeedMultiplier;
+                if (_lastTimeSample != _gameController.musictrack.timeSamples)
+                {
+                    _lastTrackTime = _gameController.musictrack.time - _gameController.noteoffset - _gameController.latency_offset;
+                    _lastTimeSample = _gameController.musictrack.timeSamples;
+                }
+                //slight correction
+                _trackTime += (_lastTrackTime - _trackTime) / 60f;
+
+                if (_trackTime >= _currentNoteEndTime)
+                {
+                    _noteIndex++;
+                    if (_noteIndex + 1 < _gameController.leveldata.Count)
+                    {
+                        _lastNoteEndTime = _currentNoteEndTime + (.005f * TootTallyGlobalVariables.gameSpeedMultiplier);
+                        _isSlider = Mathf.Abs(_gameController.leveldata[_noteIndex + 1][0] - (_gameController.leveldata[_noteIndex][0] + _gameController.leveldata[_noteIndex][1])) < 0.05f;
+                        _currentNoteStartTime = B2s(_gameController.leveldata[_noteIndex + 1][0], _gameController.tempo);
+                        _currentNoteEndTime = _currentNoteStartTime + B2s(_gameController.leveldata[_noteIndex + 1][1], _gameController.tempo);
+                        _lastNoteEndTime = Mathf.Min(_lastNoteEndTime, _currentNoteStartTime - .01f);
+                        _releasedBetweenNotes = !_isTooting;
+                    }
+                    else
+                    {
+                        _currentNoteStartTime = float.MaxValue;
+                        _isSlider = false;
+                    }
+
+                }
+
+                _isNoteActive = _trackTime >= _currentNoteStartTime - dt * 5f && _trackTime < _currentNoteEndTime + dt * 5f;
+            }
+            public static float B2s(float time, float bpm) => time / bpm * 60f;
+
         }
         #endregion
 
@@ -380,9 +471,184 @@ namespace TootTallyGameModifiers
         {
             public override Metadata Metadata => AUTO_PILOT;
 
+            private GameController _gameController;
+            private RectTransform _pointerRect;
+            private int _noteIndex;
+            private float _trackTime, _lastTrackTime, _lastTimeSample,
+                _currentNoteStartTime, _currentNoteEndTime,
+                _currentNoteStartY, _currentNoteEndY,
+                _lastNoteEndY,
+                _lastNoteEndTime,
+                _earlyTimingAdjustValue, _lateTimingAdjustValue;
+            private Vector2 _pointerPosition;
+            private BackgroundPuppetController _bgPuppetController;
+            private Vector2 _screenDim;
+
             public override void Initialize(GameController __instance)
             {
+                _gameController = __instance;
+                _gameController.controllermode = true;
+                _pointerRect = _gameController.pointerrect;
+                _noteIndex = -1;
+                _lastNoteEndY = 0;
+                _lastNoteEndTime = -999;
+                _lastTrackTime = _trackTime = 0f;
+                _lastTimeSample = 0f;
+                _pointerPosition = _pointerRect.anchoredPosition;
+                if (_gameController.leveldata.Count > 0)
+                {
+                    _currentNoteStartTime = B2s(_gameController.leveldata[0][0], _gameController.tempo);
+                    _currentNoteEndTime = _currentNoteStartTime + B2s(_gameController.leveldata[0][1], _gameController.tempo);
+                    _currentNoteStartY = _gameController.leveldata[0][2];
+                    _currentNoteEndY = _gameController.leveldata[0][4];
+                }
+                _earlyTimingAdjustValue = .005f * TootTallyGlobalVariables.gameSpeedMultiplier;
+                _lateTimingAdjustValue = .005f * TootTallyGlobalVariables.gameSpeedMultiplier;
 
+                _screenDim = new Vector2(Screen.width, Screen.height);
+                if (__instance.bgcontroller != null)
+                    _bgPuppetController = __instance.bgcontroller.fullbgobject.GetComponent<BackgroundPuppetController>();
+                else
+                    _bgPuppetController = null;
+            }
+
+            public override void Update(GameController __instance)
+            {
+                if (_gameController == null || !_gameController.enabled || _gameController.freeplay) return;
+
+                if (!_gameController.paused && !_gameController.quitting && _gameController.musictrack.isPlaying)
+                    UpdateTrackData();
+
+                _pointerPosition.y = GetPositionY();
+                _pointerRect.anchoredPosition = _pointerPosition;
+
+                if (_gameController != null && _gameController.puppet_humanc != null)
+                {
+                    _gameController.puppet_humanc.doPuppetControl(-_pointerPosition.y / 225);
+                    _bgPuppetController?.DoPuppetControl(-_pointerPosition.y / 225, _gameController.vibratoamt);
+                }
+            }
+
+            private void UpdateTrackData()
+            {
+                var dt = Time.deltaTime;
+                _trackTime += dt * TootTallyGlobalVariables.gameSpeedMultiplier;
+                if (_lastTimeSample != _gameController.musictrack.timeSamples)
+                {
+                    _lastTrackTime = _gameController.musictrack.time - _gameController.noteoffset - _gameController.latency_offset;
+                    _lastTimeSample = _gameController.musictrack.timeSamples;
+                }
+                //slight correction
+                _trackTime += (_lastTrackTime - _trackTime) / 60f;
+
+                if (_trackTime >= _currentNoteEndTime)
+                {
+                    _noteIndex++;
+                    if (_noteIndex + 1 < _gameController.leveldata.Count)
+                    {
+                        _lastNoteEndTime = _currentNoteEndTime + _lateTimingAdjustValue;
+                        _lastNoteEndY = _currentNoteEndY;
+
+                        _currentNoteStartTime = B2s(_gameController.leveldata[_noteIndex + 1][0], _gameController.tempo);
+                        _currentNoteEndTime = _currentNoteStartTime + B2s(_gameController.leveldata[_noteIndex + 1][1], _gameController.tempo);
+                        _currentNoteStartY = _gameController.leveldata[_noteIndex + 1][2];
+                        _currentNoteEndY = _gameController.leveldata[_noteIndex + 1][4];
+                        _lastNoteEndTime = Mathf.Min(_lastNoteEndTime, _currentNoteStartTime - .01f);
+                    }
+                    else
+                    {
+                        _currentNoteStartTime = float.MaxValue;
+                    }
+
+                }
+            }
+
+            private float GetPositionY()
+            {
+                float by;
+                if (_trackTime >= _currentNoteStartTime - _earlyTimingAdjustValue && _trackTime <= _currentNoteEndTime + _lateTimingAdjustValue)
+                {
+                    if (_currentNoteStartY != _currentNoteEndY)
+                        by = Mathf.Clamp(1f - ((_currentNoteEndTime - _trackTime - (.005555f * TootTallyGlobalVariables.gameSpeedMultiplier)) / (_currentNoteEndTime - _currentNoteStartTime)), 0, 1);
+                    else
+                        by = Mathf.Clamp(1f - ((_currentNoteEndTime - _trackTime) / (_currentNoteEndTime - (_currentNoteStartTime - _earlyTimingAdjustValue))), 0, 1);
+                    return _currentNoteStartY + _gameController.easeInOutVal(Mathf.Abs(by), 0f, _currentNoteEndY - _currentNoteStartY, 1f);
+                }
+                var adjustedNoteStart = _currentNoteStartTime - _earlyTimingAdjustValue;
+                by = Mathf.Clamp(1f - ((adjustedNoteStart - _trackTime) / (adjustedNoteStart - _lastNoteEndTime)), 0, 1);
+                return Mathf.Lerp(_lastNoteEndY, _currentNoteStartY, InOutQuad(by));
+            }
+
+            public static float InQuad(float t) => t * t;
+            public static float OutQuad(float t) => 1 - InQuad(1 - t);
+            public static float InOutQuad(float t)
+            {
+                if (t < 0.5) return InQuad(t * 2) / 2;
+                return 1 - InQuad((1 - t) * 2) / 2;
+            }
+
+            public static float B2s(float time, float bpm) => time / bpm * 60f;
+
+        }
+        #endregion
+
+        #region KeyboardMode
+        public class KeyboardMode : GameModifierBase
+        {
+            public override Metadata Metadata => KEYBOARD_MODE;
+
+            private readonly Dictionary<KeyCode, float> _keycodeToPositionDict = new Dictionary<KeyCode, float>()
+            {
+                { KeyCode.A, 0f },
+                { KeyCode.S, 13.75f },
+                { KeyCode.D, 41.25f },
+                { KeyCode.F, 68.75f },
+                { KeyCode.G, 96.25f },
+                { KeyCode.H, 110f },
+                { KeyCode.J, 137.5f },
+                { KeyCode.K, 165f },
+                { KeyCode.M, -13.75f },
+                { KeyCode.N, -41.25f },
+                { KeyCode.B, -68.75f },
+                { KeyCode.V, -96.25f },
+                { KeyCode.C, -110f },
+                { KeyCode.X, -137.5f },
+                { KeyCode.Z, -165f },
+            };
+            private Vector3 _pitchOffset;
+            private Vector3 _lastPointerPosition;
+
+            public override void Initialize(GameController __instance)
+            {
+                __instance.controllermode = true;
+                __instance.gameplay_settings.mouse_movementmode = 1; //This makes it so pausing / resuming won't break CursorLockMode;
+                Cursor.lockState = CursorLockMode.Locked;
+                _lastPointerPosition = __instance.pointer.transform.localPosition;
+                _pitchOffset = Vector3.zero;
+            }
+
+            public override void Update(GameController __instance)
+            {
+                var key = _keycodeToPositionDict.Keys.FirstOrDefault(Input.GetKeyDown);
+                if (key != default)
+                {
+                    _lastPointerPosition = __instance.pointer.transform.localPosition;
+                    var pitchUp = Input.GetKey(KeyCode.LeftShift) ? 13.75f : 0;
+                    var pitchDown = Input.GetKey(KeyCode.LeftControl) ? -13.75f : 0;
+                    _lastPointerPosition.y = _keycodeToPositionDict[key] + pitchUp + pitchDown;
+                    _pitchOffset.y = 0;
+                }
+                var mouseDeltaY = Input.GetAxisRaw("Mouse Y") * 4f;
+                if (mouseDeltaY != 0)
+                {
+                    _pitchOffset.y += mouseDeltaY;
+                    if (Mathf.Abs(_lastPointerPosition.y + _pitchOffset.y) >= 180)
+                    {
+                        _lastPointerPosition.y = 180 * Mathf.Sign(_lastPointerPosition.y + _pitchOffset.y);
+                        _pitchOffset.y = 0;
+                    }
+                }
+                __instance.pointer.transform.localPosition = _lastPointerPosition + _pitchOffset;
             }
         }
         #endregion
@@ -413,10 +679,13 @@ namespace TootTallyGameModifiers
             InstaFail,
             EasyMode,
             StrictMode,
-            AutoTune,
             HiddenCursor,
             NoBreathing,
             MirrorMode,
+            ScoreV2,
+            KeyboardMode,
+            AutoPilot,
+            RelaxMode,
         }
 
         public enum ControlType
