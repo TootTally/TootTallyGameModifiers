@@ -1,14 +1,10 @@
-﻿using Rewired;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using TootTallyCore.Utils.TootTallyGlobals;
 using TrombLoader.Data;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 using UnityEngine.UI;
-using UnityEngineInternal.Input;
-using static Rewired.Platforms.Custom.CustomInputSource;
 
 namespace TootTallyGameModifiers
 {
