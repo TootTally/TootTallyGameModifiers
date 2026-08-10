@@ -4,7 +4,6 @@ using System.Linq;
 using TootTallyCore.Utils.TootTallyGlobals;
 using TootTallyCore.Utils.TootTallyNotifs;
 using UnityEngine;
-using UnityEngine.Localization.Pseudo;
 
 namespace TootTallyGameModifiers
 {
