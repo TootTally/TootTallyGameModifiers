@@ -25,8 +25,8 @@ namespace TootTallyGameModifiers
         public static Metadata NO_BREATHING = new Metadata("NB", ModifierType.NoBreathing, "No Breathing: Disables the breathing mechanic (Unrated)", false, true);
         public static Metadata MIRROR_MODE = new Metadata("MR", ModifierType.MirrorMode, "Mirror Mode: Inverts the Y axis.", true, true);
         public static Metadata SCORE_V2 = new Metadata("V2", ModifierType.ScoreV2, "Score V2: Normalizes the score to 1 million points.", false, true);
-        public static Metadata AUTO_PILOT = new Metadata("AP", ModifierType.AutoPilot, "Auto Pilot: Automatically aim at the notes.", false, true);
-        public static Metadata RELAX_MODE = new Metadata("RX", ModifierType.RelaxMode, "Relax Mode: Automatically toot when hovering a note.", false, true);
+        public static Metadata AUTO_PILOT = new Metadata("AP", ModifierType.AutoPilot, "Auto Pilot: Automatically aim at the notes.", true, true);
+        public static Metadata RELAX_MODE = new Metadata("RX", ModifierType.RelaxMode, "Relax Mode: Automatically toot when hovering a note.", true, true);
         public static Metadata KEYBOARD_MODE = new Metadata("KM", ModifierType.KeyboardMode, "Keyboard Mode: Play notes with your keyboard, adjust pitch with mouse", false, false);
 
         #region Hidden
