@@ -1,6 +1,6 @@
 #### Changelog:
 
-`v1.2.12` -> `v1.2.13`
+`v1.2.12` -> `v1.2.14`
 
 ```diff
 + Enabled Score submit for AP and RX
