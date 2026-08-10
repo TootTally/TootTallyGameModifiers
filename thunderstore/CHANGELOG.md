@@ -1,5 +1,12 @@
 #### Changelog:
 
+`v1.2.12` -> `v1.2.13`
+
+```diff
++ Enabled Score submit for AP and RX
++ Added Option to show letters instead of icons for modifiers (thanks emmett)
+```
+
 `v1.2.11` -> `v1.2.12`
 
 ```diff
