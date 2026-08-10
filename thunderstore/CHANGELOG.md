@@ -1,5 +1,10 @@
 #### Changelog:
 
+`v1.2.12` -> `v1.2.13`
+```diff
++ Added toggle to display mods as letters instead of icons
+```
+
 `v1.2.11` -> `v1.2.12`
 
 ```diff
