@@ -17,6 +17,7 @@ namespace TootTallyGameModifiers
 
         private Harmony _harmony;
         public ConfigEntry<bool> ModuleConfigEnabled { get; set; }
+        public ConfigEntry<bool> LetterModifiersEnabled { get; set; }
         public bool IsConfigInitialized { get; set; }
 
         //Change this name to whatever you want
@@ -40,11 +41,13 @@ namespace TootTallyGameModifiers
         {
             // Bind to the TTModules Config for TootTally
             ModuleConfigEnabled = TootTallyCore.Plugin.Instance.Config.Bind("Modules", "GameModifiers", true, "Enable GameModifiers");
+            LetterModifiersEnabled = Config.Bind("General", "Letter Modifiers", false, "Display modifiers as letters instead of icons");
             TootTallyModuleManager.AddModule(this);
         }
 
         public void LoadModule()
         {
+            TootTallySettings.Plugin.MainTootTallySettingPage.AddToggle("Display modifiers as letters", LetterModifiersEnabled);
             AssetBundleManager.LoadAssets(Path.Combine(Path.GetDirectoryName(Instance.Info.Location), "layoutassetbundle"));
             AssetManager.LoadAssets(Path.Combine(Path.GetDirectoryName(Instance.Info.Location), "Assets"));
             _harmony.PatchAll(typeof(GameModifierManager));

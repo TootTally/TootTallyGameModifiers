@@ -24,7 +24,9 @@ public class ModifierButton
         var sprite = AssetManager.GetSprite($"{modifier.Name}.png");
         this.active = active;
         this.modifier = modifier;
-        button = GameObjectFactory.CreateCustomButton(transform, Vector2.zero, size, sprite, name, onClick);
+        button = Plugin.Instance.LetterModifiersEnabled.Value
+            ? GameObjectFactory.CreateDefaultButton(transform, Vector2.zero, size, modifier.Name, 20, name, onClick)
+            : GameObjectFactory.CreateCustomButton(transform, Vector2.zero, size, sprite, name, onClick);
         var gameObject = button.gameObject;
         var bubble = GameObjectFactory.CreateBubble(Vector2.zero, name + "Bubble", modifier.Description, new Vector2(1f, 0f), bubbleBorder, true, fontSize);
         gameObject.AddComponent<BubblePopupHandler>().Initialize(transform, bubble, useWorldPosition);
