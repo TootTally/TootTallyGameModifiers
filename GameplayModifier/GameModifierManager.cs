@@ -133,7 +133,7 @@ namespace TootTallyGameModifiers
             _strictMode?.Update(__instance);
             _noBreathing?.Update(__instance);
             _keyboardMode?.Update(__instance);
-            _autoPilot?.Update(__instance);
+            //_autoPilot?.Update(__instance);
             _relaxMode?.Update(__instance);
         }
 
@@ -144,8 +144,9 @@ namespace TootTallyGameModifiers
             if (!_isInitialized && !__instance.freeplay && !__instance.paused && !__instance.quitting) return;
 
             _relaxMode?.SpecialUpdate(ref __result);
-
+            _autoPilot?.Update(__instance);
         }
+
 
         [HarmonyPatch(typeof(GameController), nameof(GameController.doScoreText))]
         [HarmonyPostfix]

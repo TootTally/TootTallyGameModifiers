@@ -5,6 +5,7 @@ using TrombLoader.Data;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 using UnityEngine.UI;
+using static Unity.Audio.Handle;
 
 namespace TootTallyGameModifiers
 {
@@ -124,6 +125,27 @@ namespace TootTallyGameModifiers
 
                 while (_activeNotesComponents.Count > 0 && _activeNotesComponents.Peek().endPoint.transform.position.x <= END_FADEOUT_POSX)
                     _activeNotesComponents.Dequeue();
+            }
+
+            //STILL WIP
+            public override void SpecialUpdate(GameController __instance)
+            {
+                while (_activeNotesComponents.Count > 0)
+                {
+                    var note = _activeNotesComponents.Dequeue();
+                    note.alphaStart.a = 1f;
+                    note.alphaEnd.a = 1f;
+                    note.outlineLine.startColor = _bodyOutStartColor - note.alphaStart;
+                    note.line.startColor = _bodyInStartColor - note.alphaStart;
+                    note.startPoint.color = _headOutColor - note.alphaStart;
+                    note.startPointColor.color = _headInColor - note.alphaStart;
+
+                    note.outlineLine.endColor = _bodyOutEndColor - note.alphaEnd;
+                    note.line.endColor = _bodyInEndColor - note.alphaEnd;
+                    note.endPoint.color = _tailOutColor - note.alphaEnd;
+                    note.endPointColor.color = _tailInColor - note.alphaEnd;
+                }
+                _counter = __instance.currentnoteindex + 1;
             }
 
             public class FullNoteComponents

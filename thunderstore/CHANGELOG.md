@@ -1,5 +1,11 @@
 #### Changelog:
 
+`v1.2.14` -> `v1.2.15`
+
+```diff
++ Added RK modifier
+```
+
 `v1.2.12` -> `v1.2.14`
 
 ```diff
